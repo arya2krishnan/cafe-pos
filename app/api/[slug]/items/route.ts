@@ -1,21 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, cafeRef, getUserIdForSlug } from '@/lib/firebase-admin';
-import { verifyIdToken, unauthorized } from '@/lib/withAuth';
+import { verifySlugOwnership } from '@/lib/withAuth';
 
 
 // GET /api/[slug]/items — public
+// Add ?all=true to include archived items (admin only — no auth required but hidden by default)
 export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const includeArchived = req.nextUrl.searchParams.get('all') === 'true';
+
   const db = getDb();
   const userId = await getUserIdForSlug(db, slug);
   if (!userId) return NextResponse.json({ error: 'Cafe not found' }, { status: 404 });
 
-  const items = await cafeRef(db, userId).collection('items').get();
-  const itemsData = items.docs.map((doc) => ({
+  const cafe = cafeRef(db, userId);
+  const itemsSnap = await cafe.collection('items').get();
+  let itemsData: any[] = itemsSnap.docs.map((doc) => ({
     ...doc.data(),
     soldOut: doc.data().soldOut ?? false,
     displayOrder: doc.data().displayOrder ?? 999,
+    archived: doc.data().archived ?? false,
   }));
+
+  if (!includeArchived) {
+    // Filter out individually archived items
+    itemsData = itemsData.filter((item) => !item.archived);
+
+    // Also filter out items whose category is archived
+    const archivedCatsSnap = await cafe.collection('categories').where('archived', '==', true).get();
+    if (!archivedCatsSnap.empty) {
+      const archivedNames = new Set(archivedCatsSnap.docs.map((d) => d.id));
+      itemsData = itemsData.filter((item) => !archivedNames.has(item.category));
+    }
+  }
 
   itemsData.sort((a: any, b: any) => {
     if (a.displayOrder !== b.displayOrder) return a.displayOrder - b.displayOrder;
@@ -28,13 +45,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
 // POST /api/[slug]/items — protected (owner only)
 export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const userId = await verifyIdToken(req);
-  if (!userId) return unauthorized();
-
-  // Verify the token belongs to this cafe's owner
-  const db = getDb();
-  const ownerId = await getUserIdForSlug(db, slug);
-  if (ownerId !== userId) return unauthorized();
+  const auth = await verifySlugOwnership(req, slug);
+  if (auth instanceof Response) return auth;
+  const { userId, db } = auth;
 
   const { name, description, options, category } = await req.json();
 

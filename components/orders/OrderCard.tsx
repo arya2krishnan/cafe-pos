@@ -1,5 +1,7 @@
 'use client';
-import { Card, Typography, Box, Divider, List, ListItem, ListItemContent, Chip, Stack, Button, IconButton } from '@mui/joy';
+import { Card, Typography, Box, Divider, List, ListItem, ListItemContent, Button } from '@mui/joy';
+import TooltipIconButton from '@/components/common/TooltipIconButton';
+import OptionChips from '@/components/common/OptionChips';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { OrderData } from '@/types';
 
@@ -19,14 +21,15 @@ export default function OrderCard({ order, onComplete, onDelete }: OrderCardProp
         <Typography level="h2" sx={{ fontSize: '1.5rem', fontWeight: 600 }}>
           Order #{order.orderNumber}
         </Typography>
-        <IconButton
+        <TooltipIconButton
+          tooltip="Delete order"
           variant="plain"
           color="danger"
           size="sm"
           onClick={() => onDelete(String(order.id || order.orderNumber), order.orderNumber)}
         >
           <DeleteIcon />
-        </IconButton>
+        </TooltipIconButton>
       </Box>
 
       <Box sx={{ p: 2, flexGrow: 1 }}>
@@ -48,19 +51,9 @@ export default function OrderCard({ order, onComplete, onDelete }: OrderCardProp
                   <Typography sx={{ fontWeight: 500 }}>
                     {item.quantity}x {item.item.name}
                   </Typography>
-                  {Object.entries(item.selectedOptions).length > 0 && (
-                    <Box sx={{ mt: 0.5 }}>
-                      {Object.entries(item.selectedOptions).map(([optionName, values]) => (
-                        <Stack key={optionName} direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', mt: 0.5 }}>
-                          {values.map((value) => (
-                            <Chip key={value} size="sm" variant="soft" color="primary" sx={{ mb: 0.5 }}>
-                              {optionName}: {value}
-                            </Chip>
-                          ))}
-                        </Stack>
-                      ))}
-                    </Box>
-                  )}
+                  <Box sx={{ mt: 0.5 }}>
+                    <OptionChips selectedOptions={item.selectedOptions} color="primary" />
+                  </Box>
                 </ListItemContent>
               </ListItem>
             ))}

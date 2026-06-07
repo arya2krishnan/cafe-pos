@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, cafeRef, getUserIdForSlug } from '@/lib/firebase-admin';
-import { verifyIdToken, unauthorized } from '@/lib/withAuth';
+import { verifySlugOwnership } from '@/lib/withAuth';
 
 
 // GET /api/[slug]/orders?type=unfinished|completed
 export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const userId = await verifyIdToken(req);
-  if (!userId) return unauthorized();
-
-  const db = getDb();
-  const ownerId = await getUserIdForSlug(db, slug);
-  if (ownerId !== userId) return unauthorized();
+  const auth = await verifySlugOwnership(req, slug);
+  if (auth instanceof Response) return auth;
+  const { userId, db } = auth;
 
   const type = req.nextUrl.searchParams.get('type') || 'unfinished';
   const finished = type === 'completed';

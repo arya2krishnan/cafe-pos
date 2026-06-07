@@ -1,38 +1,26 @@
 'use client';
-// This page is shown after Google sign-in for first-time users who don't have a cafe yet.
-// They're already authenticated — just need to fill in cafe name, Venmo username, and logo.
 import { Box, Typography, Stack, Alert, CircularProgress } from '@mui/joy';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
-import { CafeDetailsForm, createCafe } from '@/app/signup/page';
+import { CafeDetailsForm } from '@/components/auth/CafeDetailsForm';
+import { createCafe } from '@/lib/createCafe';
+import { useLogoUpload } from '@/hooks/useLogoUpload';
 import CoffeeIcon from '@mui/icons-material/Coffee';
 
 export default function SetupPage() {
   const router = useRouter();
   const { user, loading, getIdToken } = useAuth();
-  const fileRef = useRef<HTMLInputElement>(null);
+  const logo = useLogoUpload();
 
   const [cafeName, setCafeName] = useState('');
   const [venmoUsername, setVenmoUsername] = useState('');
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
-  }, [user, loading]);
-
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setLogoFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setLogoPreview(reader.result as string);
-    reader.readAsDataURL(file);
-  };
+  }, [user, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +33,7 @@ export default function SetupPage() {
     try {
       const token = await getIdToken();
       if (!token) throw new Error('Not authenticated');
-      const { slug } = await createCafe(token, cafeName, venmoUsername, logoFile);
+      const { slug } = await createCafe(token, cafeName, venmoUsername, logo.file);
       router.replace(`/${slug}/admin`);
     } catch (err: any) {
       setError(err?.message || 'Failed to create your cafe');
@@ -63,7 +51,7 @@ export default function SetupPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2, bgcolor: 'background.body' }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2, bgcolor: 'background.Body' }}>
       <Box sx={{ width: '100%', maxWidth: 480 }}>
         <Stack alignItems="center" spacing={1} sx={{ mb: 4 }}>
           <CoffeeIcon sx={{ fontSize: 48, color: 'primary.500' }} />
@@ -80,9 +68,9 @@ export default function SetupPage() {
           setCafeName={setCafeName}
           venmoUsername={venmoUsername}
           setVenmoUsername={setVenmoUsername}
-          logoPreview={logoPreview}
-          fileRef={fileRef}
-          handleLogoChange={handleLogoChange}
+          logoPreview={logo.preview}
+          fileRef={logo.inputRef}
+          handleLogoChange={logo.handleChange}
           isLoading={isLoading}
           onSubmit={handleSubmit}
         />

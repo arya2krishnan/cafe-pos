@@ -1,5 +1,5 @@
 'use client';
-import { ItemData, OrderData, StoreSession, CafeConfig, ApiResponse } from '@/types';
+import { ItemData, OrderData, StoreSession, CafeConfig, CategoryData, ApiResponse } from '@/types';
 
 // Calls the Next.js API routes. Protected routes require an idToken.
 
@@ -24,11 +24,45 @@ async function apiFetch<T>(
   }
 }
 
+function transformItems(r: ApiResponse<ItemData[]>): ApiResponse<ItemData[]> {
+  if (!r.success || !r.data) return r;
+  const transformed = r.data.map((item: any) => {
+    const { price: _price, ...rest } = item;
+    return {
+      ...rest,
+      title: item.name,
+      soldOut: item.soldOut ?? false,
+      archived: item.archived ?? false,
+      displayOrder: item.displayOrder ?? 999,
+      options: Array.isArray(item.options) ? item.options : [],
+      category: item.category || 'misc',
+    };
+  });
+  return { success: true, data: transformed };
+}
+
 export function createApiService(slug: string, getIdToken: () => Promise<string | null>) {
   const base = `/api/${slug}`;
 
   return {
     getCafeConfig: () => apiFetch<CafeConfig>(`${base}/config`),
+
+    getCategories: () => apiFetch<CategoryData[]>(`${base}/categories`),
+
+    createCategory: async (name: string) => {
+      const token = await getIdToken();
+      return apiFetch<{ name: string; displayOrder: number }>(`${base}/categories`, {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      }, token);
+    },
+
+    deleteCategory: async (name: string) => {
+      const token = await getIdToken();
+      return apiFetch<{ deleted: number; category: string }>(`${base}/categories/${encodeURIComponent(name)}`, {
+        method: 'DELETE',
+      }, token);
+    },
 
     getShopStatus: () =>
       apiFetch<{ isOpen: boolean }>(`${base}/shop`),
@@ -42,27 +76,33 @@ export function createApiService(slug: string, getIdToken: () => Promise<string 
     },
 
     getItems: (): Promise<ApiResponse<ItemData[]>> =>
-      apiFetch<ItemData[]>(`${base}/items`).then((r) => {
-        if (!r.success || !r.data) return r;
-        const transformed = r.data.map((item: any) => {
-          const { price: _price, ...rest } = item;
-          return {
-            ...rest,
-            title: item.name,
-            soldOut: item.soldOut ?? false,
-            displayOrder: item.displayOrder ?? 999,
-            options: Array.isArray(item.options) ? item.options : [],
-            category: item.category || 'misc',
-          };
-        });
-        return { success: true, data: transformed };
-      }),
+      apiFetch<ItemData[]>(`${base}/items`).then(transformItems),
+
+    // Returns ALL items including archived — for admin use
+    getAllItems: (): Promise<ApiResponse<ItemData[]>> =>
+      apiFetch<ItemData[]>(`${base}/items?all=true`).then(transformItems),
 
     createItem: async (itemData: Partial<ItemData>) => {
       const token = await getIdToken();
       return apiFetch<{ itemId: string; item: ItemData }>(`${base}/items`, {
         method: 'POST',
         body: JSON.stringify(itemData),
+      }, token);
+    },
+
+    setItemArchived: async (itemId: string, archived: boolean) => {
+      const token = await getIdToken();
+      return apiFetch<{ ok: boolean }>(`${base}/items/${itemId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ archived }),
+      }, token);
+    },
+
+    setCategoryArchived: async (name: string, archived: boolean) => {
+      const token = await getIdToken();
+      return apiFetch<{ ok: boolean }>(`${base}/categories/${encodeURIComponent(name)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ archived }),
       }, token);
     },
 

@@ -2,7 +2,6 @@
 import Modal from '@mui/joy/Modal';
 import ModalDialog from '@mui/joy/ModalDialog';
 import Button from '@mui/joy/Button';
-import Stack from '@mui/joy/Stack';
 import Typography from '@mui/joy/Typography';
 import Box from '@mui/joy/Box';
 import Divider from '@mui/joy/Divider';

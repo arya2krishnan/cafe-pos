@@ -5,9 +5,8 @@ import Modal from '@mui/joy/Modal';
 import ModalDialog from '@mui/joy/ModalDialog';
 import Typography from '@mui/joy/Typography';
 import ItemOptions, { ItemOptionsProps } from './ItemOptions';
-import { ButtonGroup, IconButton, Stack, Box } from '@mui/joy';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
+import { Box } from '@mui/joy';
+import QuantityControl from '@/components/common/QuantityControl';
 
 interface ItemOptionsModalProps {
   item: string;
@@ -22,6 +21,7 @@ interface ItemOptionsModalProps {
 export default function ItemOptionsModal(props: ItemOptionsModalProps) {
   const [selectedValues, setSelectedValues] = React.useState<Record<string, string[]>>({});
   const [total, setTotal] = React.useState(1);
+  const [quantityError, setQuantityError] = React.useState('');
 
   React.useEffect(() => {
     if (props.isOpen && props.options.length > 0) {
@@ -40,7 +40,8 @@ export default function ItemOptionsModal(props: ItemOptionsModalProps) {
   };
 
   const onSubmit = () => {
-    if (total <= 0) { alert('Please select at least 1 item'); return; }
+    if (total <= 0) { setQuantityError('Please select at least 1 item.'); return; }
+    setQuantityError('');
     props.onSubmit?.(selectedValues, total);
   };
 
@@ -87,19 +88,16 @@ export default function ItemOptionsModal(props: ItemOptionsModalProps) {
           ))}
         </Box>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-          <ButtonGroup>
-            <IconButton variant="outlined" onClick={() => setTotal((t) => Math.max(1, t - 1))} disabled={total <= 1}>
-              <RemoveIcon />
-            </IconButton>
-            <Button variant="outlined" sx={{ px: 3, pointerEvents: 'none' }}>{total}</Button>
-            <IconButton variant="outlined" onClick={() => setTotal((t) => t + 1)}>
-              <AddIcon />
-            </IconButton>
-          </ButtonGroup>
-          <Button variant="solid" color="primary" onClick={onSubmit} sx={{ px: 4 }}>
-            Add to Cart
-          </Button>
+        <Box sx={{ mt: 2 }}>
+          {quantityError && (
+            <Typography level="body-xs" color="danger" sx={{ mb: 1 }}>{quantityError}</Typography>
+          )}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <QuantityControl value={total} onChange={setTotal} />
+            <Button variant="solid" color="primary" onClick={onSubmit} sx={{ px: 4 }}>
+              Add to Cart
+            </Button>
+          </Box>
         </Box>
       </ModalDialog>
     </Modal>

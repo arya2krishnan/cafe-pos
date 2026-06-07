@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, cafeRef } from '@/lib/firebase-admin';
-import { verifyIdToken, unauthorized } from '@/lib/withAuth';
+import { verifyIdToken, unauthorized, stripTwilioCreds } from '@/lib/withAuth';
 
 // GET /api/cafe/me — return the current user's cafe config (used after login to get slug)
 export async function GET(req: NextRequest) {
@@ -14,5 +14,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'No cafe found for this account' }, { status: 404 });
   }
 
-  return NextResponse.json(configDoc.data());
+  const { safe, hasTwilioCreds } = stripTwilioCreds(configDoc.data() ?? {});
+  return NextResponse.json({ ...safe, hasTwilioCreds });
 }

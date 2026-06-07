@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, getStorage, cafeRef, getUserIdForSlug } from '@/lib/firebase-admin';
-import { verifyIdToken, unauthorized } from '@/lib/withAuth';
-import { v4 as uuidv4 } from 'uuid';
+import { cafeRef } from '@/lib/firebase-admin';
+import { verifySlugOwnership } from '@/lib/withAuth';
+import { uploadBase64ToStorage } from '@/lib/imageUpload';
 
 
 // POST /api/[slug]/upload — base64 image upload for an item
 export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const userId = await verifyIdToken(req);
-  if (!userId) return unauthorized();
-
-  const db = getDb();
-  const ownerId = await getUserIdForSlug(db, slug);
-  if (ownerId !== userId) return unauthorized();
+  const auth = await verifySlugOwnership(req, slug);
+  if (auth instanceof Response) return auth;
+  const { userId, db } = auth;
 
   const { itemId, base64Data, filename, mimeType } = await req.json();
 
@@ -20,28 +17,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     return NextResponse.json({ error: 'itemId, base64Data, filename, and mimeType are required' }, { status: 400 });
   }
 
-  // Verify item exists
   const itemDoc = await cafeRef(db, userId).collection('items').doc(itemId).get();
   if (!itemDoc.exists) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
 
-  // Strip data URI prefix if present
-  const base64String = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
-  const buffer = Buffer.from(base64String, 'base64');
-
-  const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
-  if (!storageBucket) return NextResponse.json({ error: 'Storage not configured' }, { status: 500 });
-
-  const storage = getStorage();
-  const bucket = storage.bucket(storageBucket);
-  const uniqueFilename = `${uuidv4()}_${filename}`;
-  const fileRef = bucket.file(`product-images/${uniqueFilename}`);
-
-  await fileRef.save(buffer, { metadata: { contentType: mimeType } });
-  await fileRef.makePublic();
-
-  const imageUrl = `https://storage.googleapis.com/${bucket.name}/product-images/${uniqueFilename}`;
-
-  await cafeRef(db, userId).collection('items').doc(itemId).update({ imageUrl });
-
-  return NextResponse.json({ imageUrl });
+  try {
+    const imageUrl = await uploadBase64ToStorage(base64Data, filename, mimeType, 'product-images');
+    await cafeRef(db, userId).collection('items').doc(itemId).update({ imageUrl });
+    return NextResponse.json({ imageUrl });
+  } catch {
+    return NextResponse.json({ error: 'Storage not configured' }, { status: 500 });
+  }
 }

@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { Button, Drawer, Box, Typography, IconButton, Stack } from '@mui/joy';
+import { Button, Drawer, Box, Typography, Stack } from '@mui/joy';
+import TooltipIconButton from '@/components/common/TooltipIconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import { QRCodeSVG } from 'qrcode.react';
 import { useCafe } from './CafeProvider';
@@ -58,7 +59,7 @@ export default function DonationButton() {
         <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 480, mx: 'auto', width: '100%' }}>
           <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography level="h4">Leave a Tip</Typography>
-            <IconButton onClick={() => setOpen(false)}><CloseIcon /></IconButton>
+            <TooltipIconButton tooltip="Close" placement="left" onClick={() => setOpen(false)}><CloseIcon /></TooltipIconButton>
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>

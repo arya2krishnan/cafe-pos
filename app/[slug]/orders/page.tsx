@@ -5,11 +5,12 @@ import { createApiService } from '@/lib/api-client';
 import { NavBar } from '@/components/NavBar';
 import OrderCard from '@/components/orders/OrderCard';
 import ShopStatusToggle from '@/components/common/ShopStatusToggle';
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { OrderData } from '@/types';
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
+import { usePolling } from '@/hooks/usePolling';
 import { use } from 'react';
 
 export default function OrdersPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -26,6 +27,7 @@ export default function OrdersPage({ params }: { params: Promise<{ slug: string 
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<{ id: string; number: number } | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -48,12 +50,10 @@ export default function OrdersPage({ params }: { params: Promise<{ slug: string 
   }, [slug]);
 
   useEffect(() => {
-    if (!user) return;
-    fetchOrders();
-    if (!isShopOpen) return;
-    const id = setInterval(() => fetchOrders(), 120000);
-    return () => clearInterval(id);
-  }, [isShopOpen, fetchOrders, user]);
+    if (user) fetchOrders();
+  }, [fetchOrders, user]);
+
+  usePolling(fetchOrders, 120_000, isShopOpen && !!user);
 
   const handleCompleteOrder = async (orderId: string) => {
     setIsLoading(true);
@@ -61,8 +61,8 @@ export default function OrdersPage({ params }: { params: Promise<{ slug: string 
     try {
       const res = await api.finishOrder(orderId);
       if (res.success) {
-        if (res.data?.textOptIn === false) alert('Order complete. No SMS (customer opted out) - call out the name!');
-        else if (res.data?.textError) alert('Order complete but SMS failed. Call out the name!');
+        if (res.data?.textOptIn === false) setSuccessMessage('Order complete. No SMS (customer opted out) — call out the name!');
+        else if (res.data?.textError) setSuccessMessage('Order complete but SMS failed. Call out the name!');
         if (isShopOpen) await fetchOrders();
       } else setError(res.error || 'Failed to complete order');
     } catch { setError('Unexpected error completing order'); }
@@ -88,25 +88,35 @@ export default function OrdersPage({ params }: { params: Promise<{ slug: string 
       <NavBar slug={slug} showAdminLinks />
       <Container maxWidth="xl" sx={{ p: 2, pt: 10, pb: 4 }}>
         {error && <Alert color="danger" sx={{ mb: 2 }}>{error}</Alert>}
+        {successMessage && (
+          <Alert
+            color={successMessage.includes('failed') || successMessage.includes('opted out') ? 'warning' : 'success'}
+            sx={{ mb: 2 }}
+            endDecorator={
+              <Button size="sm" variant="plain" color="neutral" onClick={() => setSuccessMessage(null)}>Dismiss</Button>
+            }
+          >
+            {successMessage}
+          </Alert>
+        )}
         {isLoading && <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}><CircularProgress /></Box>}
 
-        <Box sx={{ mb: 4, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-          <Typography level="h1" sx={{ bgcolor: 'primary.main', color: 'white', py: 2, px: 4, borderRadius: 'sm' }}>
-            Orders Dashboard
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <Button variant="solid" color="primary" startDecorator={<RefreshIcon />} onClick={fetchOrders} disabled={isLoading}>
+        <Box sx={{ mb: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
+          <Box>
+            <Typography level="h1">Orders</Typography>
+            {lastUpdated && (
+              <Typography level="body-xs" sx={{ color: 'text.tertiary', mt: 0.25 }}>
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </Typography>
+            )}
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Button variant="outlined" color="neutral" startDecorator={<RefreshIcon />} onClick={fetchOrders} disabled={isLoading} size="sm">
               Refresh
             </Button>
             <ShopStatusToggle slug={slug} />
           </Box>
         </Box>
-
-        {lastUpdated && (
-          <Typography level="body-sm" sx={{ mb: 2, textAlign: 'right', color: 'text.secondary' }}>
-            Last updated: {lastUpdated.toLocaleTimeString()}
-          </Typography>
-        )}
 
         {orders.length === 0 && !isLoading ? (
           <Box sx={{ textAlign: 'center', py: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '50vh' }}>
@@ -129,23 +139,14 @@ export default function OrdersPage({ params }: { params: Promise<{ slug: string 
           </Grid>
         )}
 
-        {/* Delete confirmation modal */}
-        {deleteModalOpen && (
-          <Box sx={{ position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1300 }}>
-            <Box sx={{ bgcolor: 'background.surface', borderRadius: 'md', p: 3, maxWidth: 400, width: '100%' }}>
-              <Typography level="h2" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <DeleteIcon sx={{ color: 'danger.500' }} /> Delete Order
-              </Typography>
-              <Typography level="body-md" sx={{ mb: 3 }}>
-                Are you sure you want to delete Order #{orderToDelete?.number}? This cannot be undone.
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                <Button variant="plain" color="neutral" onClick={() => { setDeleteModalOpen(false); setOrderToDelete(null); }}>Cancel</Button>
-                <Button variant="solid" color="danger" onClick={handleDeleteOrder}>Delete</Button>
-              </Box>
-            </Box>
-          </Box>
-        )}
+        <DeleteConfirmModal
+          open={deleteModalOpen}
+          onClose={() => { setDeleteModalOpen(false); setOrderToDelete(null); }}
+          onConfirm={handleDeleteOrder}
+          loading={isLoading}
+          title="Delete Order"
+          description={<>Are you sure you want to delete Order #{orderToDelete?.number}? This cannot be undone.</>}
+        />
       </Container>
     </>
   );

@@ -19,11 +19,34 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={poppins.className}>
-      <head>
-        <InitColorSchemeScript defaultMode="dark" />
-      </head>
+      <head />
       <body>
+        {/* MUI Joy dark mode — must be first child of body to prevent flash of unstyled content */}
+        <InitColorSchemeScript defaultMode="dark" />
         <Providers>{children}</Providers>
+        <footer style={{
+          textAlign: 'center',
+          padding: '6px 16px',
+          borderTop: '1px solid var(--joy-palette-divider)',
+          color: 'var(--joy-palette-text-tertiary)',
+          fontSize: '0.7rem',
+          background: 'var(--joy-palette-background-body)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+        }}>
+          <span>© {new Date().getFullYear()} Arya Krishnan</span>
+          <span style={{ opacity: 0.3 }}>·</span>
+          <a
+            href="https://venmo.com/Arya-Krishnan"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="footer-coffee-link"
+          >
+            Buy me a coffee ☕
+          </a>
+        </footer>
       </body>
     </html>
   );

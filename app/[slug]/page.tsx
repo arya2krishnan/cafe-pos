@@ -1,5 +1,5 @@
 'use client';
-import { Typography, Alert, CircularProgress, Box } from '@mui/joy';
+import { Typography, Alert, CircularProgress, Box, Chip } from '@mui/joy';
 import ItemGrid from '@/components/items/ItemGrid';
 import CartButton from '@/components/receipt/CartButton';
 import { useCartStore } from '@/store/cartStore';
@@ -39,15 +39,17 @@ export default function POSPage({ params }: { params: Promise<{ slug: string }> 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showFireworks, setShowFireworks] = useState(false);
+  const [shopOpen, setShopOpen] = useState<boolean | null>(null);
   const fireworksRef = useRef<FireworksHandlers>(null);
 
   const fetchItems = useCallback(async () => {
     setItemsLoading(true);
     setItemsError('');
     try {
-      const res = await api.getItems();
-      if (res.success && res.data) setItems(res.data as ItemData[]);
-      else setItemsError(res.error || 'Failed to fetch items');
+      const [itemsRes, shopRes] = await Promise.all([api.getItems(), api.getShopStatus()]);
+      if (itemsRes.success && itemsRes.data) setItems(itemsRes.data as ItemData[]);
+      else setItemsError(itemsRes.error || 'Failed to fetch items');
+      if (shopRes.success && shopRes.data) setShopOpen(shopRes.data.isOpen);
     } catch { setItemsError('Unexpected error fetching items'); }
     finally { setItemsLoading(false); }
   }, [slug]);
@@ -63,12 +65,13 @@ export default function POSPage({ params }: { params: Promise<{ slug: string }> 
   }, [showFireworks]);
 
   const handleCheckout = async () => {
-    if (cartItems.length === 0) { alert('Your cart is empty.'); return; }
+    if (cartItems.length === 0) { setErrorMessage('Your cart is empty.'); return; }
     setIsLoading(true);
+    setErrorMessage('');
     try {
       const status = await api.getShopStatus();
       if (!status.success || !status.data?.isOpen) {
-        alert('Sorry, the store is currently closed. Please come back later.');
+        setErrorMessage('Sorry, the store is currently closed. Please come back later.');
         return;
       }
       setIsUserInputOpen(true);
@@ -86,7 +89,7 @@ export default function POSPage({ params }: { params: Promise<{ slug: string }> 
       }
       const status = await api.getShopStatus();
       if (!status.success || !status.data?.isOpen) {
-        alert('The store has closed. Your order cannot be processed.');
+        setErrorMessage('The store has closed. Your order cannot be processed.');
         return;
       }
       const generatedOrderNumber = Math.floor(Math.random() * 900) + 100;
@@ -122,15 +125,32 @@ export default function POSPage({ params }: { params: Promise<{ slug: string }> 
       <Box sx={{ pt: '64px', pb: 4, px: { xs: 2, md: 1 }, minHeight: 'calc(100vh - 64px)', bgcolor: 'background.body' }}>
         <Box sx={{ px: { xs: 1, md: 1 } }}>
           {/* Header */}
-          <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', mt: 2, mb: 3, gap: 2 }}>
-            {cafe?.logoUrl && (
-              <img src={cafe.logoUrl} alt={cafe.name} style={{ width: 80, height: 80, objectFit: 'contain' }} />
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 2, mb: 3, gap: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 2 }}>
+              {cafe?.logoUrl && (
+                <img src={cafe.logoUrl} alt={cafe.name} style={{ width: 80, height: 80, objectFit: 'contain' }} />
+              )}
+              <Typography level="h2" sx={{ fontWeight: 'bold', fontSize: { xs: '2.5rem', md: '3.5rem' }, textTransform: 'uppercase' }}>
+                {cafe?.name ?? ''}
+              </Typography>
+            </Box>
+            {shopOpen !== null && (
+              <Chip
+                size="sm"
+                variant="soft"
+                color={shopOpen ? 'success' : 'danger'}
+                sx={{ fontWeight: 'md' }}
+              >
+                {shopOpen ? 'Open' : 'Closed'}
+              </Chip>
             )}
-            <Typography level="h2" sx={{ fontWeight: 'bold', fontSize: { xs: '2.5rem', md: '3.5rem' }, textTransform: 'uppercase' }}>
-              {cafe?.name ?? ''}
-            </Typography>
           </Box>
 
+          {shopOpen === false && (
+            <Alert color="warning" sx={{ mb: 2 }}>
+              This store is currently closed — orders cannot be placed right now.
+            </Alert>
+          )}
           {itemsError && <Alert color="danger" sx={{ mb: 2 }}>{itemsError}</Alert>}
           {errorMessage && <Alert color="danger" sx={{ mb: 2 }}>{errorMessage}</Alert>}
           {isLoading && <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress /></Box>}

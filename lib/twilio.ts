@@ -14,10 +14,20 @@ function formatPhoneNumber(phoneNumber: string): string {
   return cleaned;
 }
 
-export async function sendText(phoneNumber: string, message: string): Promise<TextResponse> {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+export interface TwilioCreds {
+  accountSid: string;
+  authToken: string;
+  phoneNumber: string;
+}
+
+export async function sendText(
+  phoneNumber: string,
+  message: string,
+  creds?: TwilioCreds,
+): Promise<TextResponse> {
+  const accountSid = creds?.accountSid || process.env.TWILIO_ACCOUNT_SID;
+  const authToken = creds?.authToken || process.env.TWILIO_AUTH_TOKEN;
+  const fromNumber = creds?.phoneNumber || process.env.TWILIO_PHONE_NUMBER;
 
   if (!accountSid || !authToken || !fromNumber) {
     return { success: false, error: 'Twilio credentials not configured' };

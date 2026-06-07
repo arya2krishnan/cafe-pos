@@ -15,6 +15,7 @@ export interface ItemData {
   category?: string;
   soldOut?: boolean;
   displayOrder?: number;
+  archived?: boolean;
 }
 
 export interface ItemOption {
@@ -59,6 +60,19 @@ export interface CafeConfig {
   userId: string;
   customSmsMessage?: string;
   accentColor?: string;
+  // Per-cafe Twilio — never sent to the browser, server-only
+  twilioAccountSid?: string;
+  twilioAuthToken?: string;
+  twilioPhoneNumber?: string;
+  // Safe flag the settings page can read
+  hasTwilioCreds?: boolean;
+}
+
+export interface CategoryData {
+  name: string;        // also the Firestore doc ID
+  displayOrder: number;
+  createdAt: string;
+  archived?: boolean;
 }
 
 export interface ApiResponse<T = Record<string, unknown>> {

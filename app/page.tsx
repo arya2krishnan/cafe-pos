@@ -1,6 +1,9 @@
 'use client';
-import { Box, Typography, Button, Stack } from '@mui/joy';
+import { Box, Typography, Button, Stack, CircularProgress } from '@mui/joy';
+import { VenmoQR } from '@/components/VenmoQR';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { useAuth } from '@/components/AuthProvider';
 import CoffeeIcon from '@mui/icons-material/Coffee';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
 import InventoryIcon from '@mui/icons-material/Inventory';
@@ -15,6 +18,35 @@ const FEATURES = [
 
 export default function LandingPage() {
   const router = useRouter();
+  const { user, loading, getIdToken } = useAuth();
+
+  // Already logged in -- find their cafe and send them straight there
+  useEffect(() => {
+    if (loading || !user) return;
+    (async () => {
+      try {
+        const token = await getIdToken();
+        const res = await fetch('/api/cafe/me', { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) {
+          const data = await res.json();
+          router.replace(`/${data.slug}/orders`);
+        } else {
+          router.replace('/setup');
+        }
+      } catch {
+        // If anything goes wrong just show the landing page
+      }
+    })();
+  }, [user, loading]);
+
+  // Show a spinner while we check auth instead of flashing the sign-in buttons
+  if (loading || user) {
+    return (
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.body' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.body' }}>
@@ -32,6 +64,15 @@ export default function LandingPage() {
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <Button size="lg" onClick={() => router.push('/signup')}>Create your cafe</Button>
           <Button size="lg" variant="outlined" color="neutral" onClick={() => router.push('/login')}>Sign in</Button>
+          <Button
+            size="lg"
+            variant="soft"
+            color="neutral"
+            startDecorator={<CoffeeIcon />}
+            onClick={() => document.getElementById('support')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            Buy me a coffee
+          </Button>
         </Stack>
 
         <Box
@@ -51,6 +92,20 @@ export default function LandingPage() {
               <Typography level="body-xs" sx={{ color: 'text.secondary' }}>{f.body}</Typography>
             </Box>
           ))}
+        </Box>
+      </Box>
+
+      {/* Buy me a coffee */}
+      <Box id="support" sx={{ py: 8, px: 3, textAlign: 'center', borderTop: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
+          <CoffeeIcon sx={{ fontSize: 28, color: 'primary.500' }} />
+          <Typography level="h3">Enjoying this?</Typography>
+        </Box>
+        <Typography level="body-md" sx={{ color: 'text.secondary', mb: 3, maxWidth: 360, mx: 'auto' }}>
+          This is a free tool built with love. If it helps your cafe, consider sending a tip on Venmo!
+        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <VenmoQR venmoUsername="Arya-Krishnan" size={160} label="Buy me a coffee" />
         </Box>
       </Box>
 

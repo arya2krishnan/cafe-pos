@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, cafeRef, getUserIdForSlug } from '@/lib/firebase-admin';
-import { verifyIdToken, unauthorized } from '@/lib/withAuth';
+import { cafeRef } from '@/lib/firebase-admin';
+import { verifySlugOwnership } from '@/lib/withAuth';
 import { sendText } from '@/lib/twilio';
 
 
@@ -10,12 +10,9 @@ export async function POST(
   { params }: { params: Promise<{ slug: string; id: string }> },
 ) {
   const { slug, id } = await params;
-  const userId = await verifyIdToken(req);
-  if (!userId) return unauthorized();
-
-  const db = getDb();
-  const ownerId = await getUserIdForSlug(db, slug);
-  if (ownerId !== userId) return unauthorized();
+  const auth = await verifySlugOwnership(req, slug);
+  if (auth instanceof Response) return auth;
+  const { userId, db } = auth;
 
   const orderRef = cafeRef(db, userId).collection('orders').doc(id);
   await orderRef.update({ finished: true });
@@ -32,9 +29,15 @@ export async function POST(
     const cafeName = config.name ?? 'Your Cafe';
     const customSmsMessage = config.customSmsMessage ?? '';
 
+    // Use per-cafe Twilio creds if configured, otherwise fall back to env vars
+    const perCafeCreds =
+      config.twilioAccountSid && config.twilioAuthToken && config.twilioPhoneNumber
+        ? { accountSid: config.twilioAccountSid, authToken: config.twilioAuthToken, phoneNumber: config.twilioPhoneNumber }
+        : undefined;
+
     const base = `${cafeName}:\nHello ${customerName}! Your order ${orderNumber} is ready!\nHead to the counter to pick it up!`;
     const message = customSmsMessage ? `${base}\n\n${customSmsMessage}` : base;
-    const textResult = await sendText(customerPhone, message);
+    const textResult = await sendText(customerPhone, message, perCafeCreds);
 
     if (!textResult.success) {
       return NextResponse.json({ message: 'Order finished but failed to send text', textError: true });

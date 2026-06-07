@@ -1,6 +1,6 @@
 'use client';
 import { usePathname, useRouter } from 'next/navigation';
-import { Box, Button, IconButton, Typography } from '@mui/joy';
+import { Box, Button, Typography } from '@mui/joy';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import StorefrontIcon from '@mui/icons-material/Storefront';
@@ -9,7 +9,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useCafe } from './CafeProvider';
 import { useAuth } from './AuthProvider';
-import Image from 'next/image';
+import TooltipIconButton from './common/TooltipIconButton';
 
 interface NavBarProps {
   slug: string;
@@ -55,13 +55,20 @@ export function NavBar({ slug, showAdminLinks = false }: NavBarProps) {
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', ml: { xs: 1, md: 2 }, minWidth: { xs: 'auto', md: '180px' } }}>
-        <IconButton onClick={() => router.push(`/${slug}`)} variant="plain" color="neutral" size="sm">
+        <TooltipIconButton
+          tooltip={cafe?.name || 'Home'}
+          placement="bottom"
+          onClick={() => router.push(`/${slug}`)}
+          variant="plain"
+          color="neutral"
+          size="sm"
+        >
           {cafe?.logoUrl ? (
             <img src={cafe.logoUrl} alt={cafe.name} style={{ width: 24, height: 24, objectFit: 'contain' }} />
           ) : (
             <StorefrontIcon sx={{ fontSize: 24 }} />
           )}
-        </IconButton>
+        </TooltipIconButton>
         <Typography level="title-lg" sx={{ ml: 1, display: { xs: 'none', sm: 'block' } }}>
           {cafe?.name ?? ''}
         </Typography>
@@ -85,15 +92,16 @@ export function NavBar({ slug, showAdminLinks = false }: NavBarProps) {
         ))}
 
         {showAdminLinks && user && (
-          <IconButton
+          <TooltipIconButton
+            tooltip="Sign out"
+            placement="bottom"
             variant="plain"
             color="neutral"
             size="sm"
             onClick={() => signOut().then(() => router.push('/'))}
-            title="Sign out"
           >
             <LogoutIcon />
-          </IconButton>
+          </TooltipIconButton>
         )}
       </Box>
     </Box>

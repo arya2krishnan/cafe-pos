@@ -4,14 +4,13 @@ import Box from '@mui/joy/Box';
 import Drawer from '@mui/joy/Drawer';
 import Button from '@mui/joy/Button';
 import Typography from '@mui/joy/Typography';
-import IconButton from '@mui/joy/IconButton';
 import Stack from '@mui/joy/Stack';
-import Chip from '@mui/joy/Chip';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
 import CloseIcon from '@mui/icons-material/Close';
+import TooltipIconButton from '@/components/common/TooltipIconButton';
+import QuantityControl from '@/components/common/QuantityControl';
+import OptionChips from '@/components/common/OptionChips';
 import { CartItem } from '@/types';
 
 interface CartButtonProps {
@@ -44,7 +43,9 @@ export default function CartButton(props: CartButtonProps) {
           {/* Header */}
           <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
             <Typography level="h4">Your Cart</Typography>
-            <IconButton variant="plain" onClick={() => setOpen(false)}><CloseIcon /></IconButton>
+            <TooltipIconButton tooltip="Close cart" placement="left" variant="plain" onClick={() => setOpen(false)}>
+              <CloseIcon />
+            </TooltipIconButton>
           </Box>
 
           {/* Items */}
@@ -60,33 +61,19 @@ export default function CartButton(props: CartButtonProps) {
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <Box sx={{ flex: 1 }}>
                         <Typography level="title-sm">{cartItem.item.name}</Typography>
-                        {Object.entries(cartItem.selectedOptions).length > 0 && (
-                          <Box sx={{ mt: 0.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {Object.entries(cartItem.selectedOptions).flatMap(([name, vals]) =>
-                              vals.map((v) => (
-                                <Chip key={`${name}-${v}`} size="sm" variant="soft">{name}: {v}</Chip>
-                              )),
-                            )}
-                          </Box>
-                        )}
+                        <OptionChips selectedOptions={cartItem.selectedOptions} />
                       </Box>
-                      <IconButton size="sm" variant="plain" color="danger" onClick={() => props.onRemove(index)}>
+                      <TooltipIconButton tooltip="Remove" size="sm" variant="plain" color="danger" onClick={() => props.onRemove(index)}>
                         <DeleteIcon />
-                      </IconButton>
+                      </TooltipIconButton>
                     </Box>
                     {props.onQuantityChange && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                        <IconButton
-                          size="sm" variant="outlined"
-                          onClick={() => props.onQuantityChange!(index, Math.max(1, cartItem.quantity - 1))}
-                          disabled={cartItem.quantity <= 1}
-                        >
-                          <RemoveIcon />
-                        </IconButton>
-                        <Typography level="body-sm" sx={{ minWidth: 24, textAlign: 'center' }}>{cartItem.quantity}</Typography>
-                        <IconButton size="sm" variant="outlined" onClick={() => props.onQuantityChange!(index, cartItem.quantity + 1)}>
-                          <AddIcon />
-                        </IconButton>
+                      <Box sx={{ mt: 1 }}>
+                        <QuantityControl
+                          size="sm"
+                          value={cartItem.quantity}
+                          onChange={(v) => props.onQuantityChange!(index, v)}
+                        />
                       </Box>
                     )}
                   </Box>

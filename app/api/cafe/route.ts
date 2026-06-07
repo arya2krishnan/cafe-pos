@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, getAuth, cafeRef } from '@/lib/firebase-admin';
+import { getDb, cafeRef } from '@/lib/firebase-admin';
 import { verifyIdToken, unauthorized } from '@/lib/withAuth';
 
 function toSlug(name: string): string {
@@ -69,7 +69,7 @@ export async function PATCH(req: NextRequest) {
   if (!userId) return unauthorized();
 
   const updates = await req.json();
-  const allowed = ['name', 'logoUrl', 'venmoUsername', 'customSmsMessage', 'accentColor'];
+  const allowed = ['name', 'logoUrl', 'venmoUsername', 'customSmsMessage', 'accentColor', 'twilioAccountSid', 'twilioAuthToken', 'twilioPhoneNumber'];
   const filtered = Object.fromEntries(Object.entries(updates).filter(([k]) => allowed.includes(k)));
 
   const db = getDb();

@@ -3,7 +3,7 @@ import { Box, Typography, Table, Sheet, Button, Tabs, TabList, Tab, CircularProg
 import { useState, useEffect } from 'react';
 import { createApiService } from '@/lib/api-client';
 import { NavBar } from '@/components/NavBar';
-import { OrderData, ItemData, StoreSession } from '@/types';
+import { OrderData } from '@/types';
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -18,13 +18,14 @@ interface StorePerformance {
   itemStats: ItemStats[];
 }
 
-function aggregateItemStats(orders: OrderData[], currentItems: ItemData[]): ItemStats[] {
+function aggregateItemStats(orders: OrderData[]): ItemStats[] {
   const stats: Record<string, ItemStats> = {};
   orders.forEach((order) => {
     order.items.forEach((cartItem) => {
       const name = cartItem.item.name;
-      const itemInfo = currentItems.find((i) => i.id === cartItem.item.id);
-      if (!stats[name]) stats[name] = { name, quantity: 0, category: itemInfo?.category || 'misc' };
+      // Use the category snapshot stored on the order item — not the current live menu —
+      // so stats remain correct even after items/categories are deleted.
+      if (!stats[name]) stats[name] = { name, quantity: 0, category: cartItem.item.category || 'misc' };
       stats[name].quantity += cartItem.quantity;
     });
   });
@@ -37,7 +38,6 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
   const router = useRouter();
   const api = createApiService(slug, getIdToken);
 
-  const [currentItems, setCurrentItems] = useState<ItemData[]>([]);
   const [storePerformance, setStorePerformance] = useState<StorePerformance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,29 +50,26 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
     (async () => {
       setIsLoading(true);
       try {
-        const [ordersRes, itemsRes, sessionsRes] = await Promise.all([
+        const [ordersRes, sessionsRes] = await Promise.all([
           api.getCompletedOrders(),
-          api.getItems(),
           api.getStoreSessions(),
         ]);
-        if (!ordersRes.success || !itemsRes.success || !sessionsRes.success) {
+        if (!ordersRes.success || !sessionsRes.success) {
           setError('Failed to load dashboard data');
           return;
         }
         const orders = ordersRes.data!;
-        const items = itemsRes.data as ItemData[];
         const sessions = sessionsRes.data!;
-        setCurrentItems(items);
 
         const perf: StorePerformance[] = [];
         const legacy = orders.filter((o) => !o.storeNumber || o.storeNumber === 0);
         if (legacy.length > 0) {
-          perf.push({ storeNumber: 0, startTime: 'Legacy Data', orderCount: legacy.length, itemStats: aggregateItemStats(legacy, items) });
+          perf.push({ storeNumber: 0, startTime: 'Legacy Data', orderCount: legacy.length, itemStats: aggregateItemStats(legacy) });
         }
         for (const session of sessions) {
           const storeRes = await api.getOrdersByStore(session.storeNumber);
           if (storeRes.success && storeRes.data) {
-            perf.push({ ...session, itemStats: aggregateItemStats(storeRes.data, items) });
+            perf.push({ ...session, itemStats: aggregateItemStats(storeRes.data) });
           }
         }
         setStorePerformance(perf.reverse());
