@@ -1,19 +1,19 @@
 'use client';
-import dynamic from 'next/dynamic';
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode } from 'react';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { CssVarsProvider } from '@mui/joy/styles';
+import { AuthProvider } from './AuthProvider';
 
-// Load the full client provider tree (MUI Joy + Firebase Auth) only in the browser.
-// This avoids SSR issues with MUI Joy's CssVarsProvider and Firebase.
-const ClientProviders = dynamic(() => import('./ClientProviders'), { ssr: false });
+// Material ThemeProvider gives @mui/icons-material the breakpoints context it needs.
+// Joy CssVarsProvider provides the Joy theme. Both coexist via separate React contexts.
+const materialTheme = createTheme();
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) {
-    // Render a bare shell during SSR / before hydration
-    return <>{children}</>;
-  }
-
-  return <ClientProviders>{children}</ClientProviders>;
+  return (
+    <ThemeProvider theme={materialTheme}>
+      <AuthProvider>
+        <CssVarsProvider>{children}</CssVarsProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
 }
