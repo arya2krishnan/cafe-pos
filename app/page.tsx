@@ -1,54 +1,62 @@
-import Link from 'next/link';
+'use client';
+import { Box, Typography, Button, Stack } from '@mui/joy';
+import { useRouter } from 'next/navigation';
+import CoffeeIcon from '@mui/icons-material/Coffee';
+import QrCode2Icon from '@mui/icons-material/QrCode2';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import SmsIcon from '@mui/icons-material/Sms';
+
+const FEATURES = [
+  { icon: <CoffeeIcon sx={{ fontSize: 32 }} />, title: 'Easy menu', body: 'Add items with photos, prices, and options in seconds.' },
+  { icon: <QrCode2Icon sx={{ fontSize: 32 }} />, title: 'Venmo tips', body: 'QR code on the order screen — customers tip instantly.' },
+  { icon: <SmsIcon sx={{ fontSize: 32 }} />, title: 'SMS alerts', body: 'Customers get a text when their order is ready.' },
+  { icon: <InventoryIcon sx={{ fontSize: 32 }} />, title: 'Live orders', body: 'See incoming orders in real time. Mark complete with one tap.' },
+];
 
 export default function LandingPage() {
+  const router = useRouter();
+
   return (
-    <main className="min-h-screen flex flex-col bg-white">
-      {/* Hero */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-20 text-center">
-        <div className="text-6xl mb-4">☕</div>
-        <h1 className="text-5xl font-bold tracking-tight text-gray-900 mb-4">
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.body' }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', px: 3, py: 10, textAlign: 'center' }}>
+        <CoffeeIcon sx={{ fontSize: 64, color: 'primary.500', mb: 2 }} />
+
+        <Typography level="h1" sx={{ fontSize: { xs: '2.5rem', md: '4rem' }, fontWeight: 'bold', mb: 2 }}>
           Home Cafe POS
-        </h1>
-        <p className="text-lg text-gray-500 max-w-md mb-10 leading-relaxed">
-          A point-of-sale for home cafes. Set up your menu, take orders, and
-          accept Venmo tips — in minutes.
-        </p>
+        </Typography>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Link
-            href="/signup"
-            className="px-8 py-3 rounded-xl bg-blue-600 text-white font-semibold text-base hover:bg-blue-700 transition-colors"
-          >
-            Create your cafe
-          </Link>
-          <Link
-            href="/login"
-            className="px-8 py-3 rounded-xl border border-gray-300 text-gray-700 font-semibold text-base hover:bg-gray-50 transition-colors"
-          >
-            Sign in
-          </Link>
-        </div>
+        <Typography level="body-lg" sx={{ maxWidth: 480, color: 'text.secondary', mb: 5, lineHeight: 1.7 }}>
+          A point-of-sale for home cafes. Set up your menu, take orders, and accept Venmo tips — in minutes.
+        </Typography>
 
-        {/* Feature grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-16 max-w-3xl w-full">
-          {[
-            { emoji: '☕', title: 'Easy menu', body: 'Add items with photos, prices, and options in seconds.' },
-            { emoji: '📱', title: 'Venmo tips', body: 'QR code on the order screen — customers tip instantly.' },
-            { emoji: '💬', title: 'SMS alerts', body: 'Customers get a text when their order is ready.' },
-            { emoji: '📋', title: 'Live orders', body: 'See incoming orders in real time. Mark complete with one tap.' },
-          ].map((f) => (
-            <div key={f.title} className="p-5 bg-gray-50 rounded-2xl text-center">
-              <div className="text-3xl mb-2">{f.emoji}</div>
-              <div className="font-semibold text-gray-900 mb-1">{f.title}</div>
-              <div className="text-sm text-gray-500">{f.body}</div>
-            </div>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Button size="lg" onClick={() => router.push('/signup')}>Create your cafe</Button>
+          <Button size="lg" variant="outlined" color="neutral" onClick={() => router.push('/login')}>Sign in</Button>
+        </Stack>
+
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' },
+            gap: 2,
+            mt: 10,
+            maxWidth: 860,
+            width: '100%',
+          }}
+        >
+          {FEATURES.map((f) => (
+            <Box key={f.title} sx={{ p: 2.5, bgcolor: 'background.level1', borderRadius: 'lg', textAlign: 'center' }}>
+              <Box sx={{ color: 'primary.500', mb: 1 }}>{f.icon}</Box>
+              <Typography level="title-sm" sx={{ mb: 0.5 }}>{f.title}</Typography>
+              <Typography level="body-xs" sx={{ color: 'text.secondary' }}>{f.body}</Typography>
+            </Box>
           ))}
-        </div>
-      </div>
+        </Box>
+      </Box>
 
-      <footer className="py-4 text-center text-xs text-gray-400">
-        homecafepos.xyz
-      </footer>
-    </main>
+      <Box component="footer" sx={{ py: 3, textAlign: 'center' }}>
+        <Typography level="body-xs" sx={{ color: 'text.tertiary' }}>homecafepos.xyz</Typography>
+      </Box>
+    </Box>
   );
 }
