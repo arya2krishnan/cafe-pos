@@ -7,11 +7,10 @@ interface CartStore {
   addItem: (item: ItemData, selectedOptions: Record<string, string[]>, quantity: number) => void;
   removeItem: (index: number) => void;
   clearCart: () => void;
-  getTotalPrice: () => number;
   updateQuantity: (index: number, quantity: number) => void;
 }
 
-export const useCartStore = create<CartStore>((set, get) => ({
+export const useCartStore = create<CartStore>((set) => ({
   items: [],
 
   addItem: (item, selectedOptions, quantity) => {
@@ -30,9 +29,5 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set((state) => ({
       items: state.items.map((item, i) => (i === index ? { ...item, quantity } : item)),
     }));
-  },
-
-  getTotalPrice: () => {
-    return get().items.reduce((total, item) => total + (item.item.price ?? 0) * item.quantity, 0);
   },
 }));

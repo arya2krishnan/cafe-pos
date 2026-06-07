@@ -8,7 +8,6 @@ export interface CartItem {
 export interface ItemData {
   id?: string | number;
   name: string;
-  price?: number;
   description?: string;
   imageUrl?: string;
   options?: ItemOption[];
@@ -31,7 +30,6 @@ export interface OrderData {
   customerPhone: string;
   textOptIn: boolean;
   items: CartItem[];
-  totalAmount: number;
   orderDate: string;
   donation: { donated: boolean; amount?: number };
   storeNumber?: number;
@@ -50,7 +48,6 @@ export interface StoreSession {
   endTime?: string;
   isActive: boolean;
   orderCount: number;
-  totalRevenue: number;
   isTemporary?: boolean;
 }
 
@@ -61,6 +58,7 @@ export interface CafeConfig {
   venmoUsername: string;
   userId: string;
   customSmsMessage?: string;
+  accentColor?: string;
 }
 
 export interface ApiResponse<T = Record<string, unknown>> {

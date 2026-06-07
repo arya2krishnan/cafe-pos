@@ -25,7 +25,6 @@ export default function POSPage({ params }: { params: Promise<{ slug: string }> 
   const cartItems = useCartStore((s) => s.items);
   const removeItem = useCartStore((s) => s.removeItem);
   const clearCart = useCartStore((s) => s.clearCart);
-  const getTotalPrice = useCartStore((s) => s.getTotalPrice);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
 
   const [items, setItems] = useState<ItemData[]>([]);
@@ -99,7 +98,7 @@ export default function POSPage({ params }: { params: Promise<{ slug: string }> 
         customerPhone,
         textOptIn: optIn,
         items: cartItems,
-        totalAmount: getTotalPrice(),
+
         orderDate: new Date().toISOString(),
         donation: { donated: false, amount: 0 },
       });

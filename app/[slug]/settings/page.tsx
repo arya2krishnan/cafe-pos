@@ -25,6 +25,7 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
   const [cafeName, setCafeName] = useState('');
   const [venmoUsername, setVenmoUsername] = useState('');
   const [customSmsMessage, setCustomSmsMessage] = useState('');
+  const [accentColor, setAccentColor] = useState('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -41,6 +42,7 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
       setCafeName(cafe.name);
       setVenmoUsername(cafe.venmoUsername);
       setCustomSmsMessage(cafe.customSmsMessage ?? '');
+      setAccentColor(cafe.accentColor ?? '');
     }
   }, [cafe]);
 
@@ -98,6 +100,7 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
           venmoUsername: venmoUsername.trim(),
           logoUrl,
           customSmsMessage: customSmsMessage.trim(),
+          accentColor: accentColor.trim(),
         }),
       });
 
@@ -168,6 +171,60 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                     </Box>
                   </FormControl>
                 </Stack>
+              </CardContent>
+            </Card>
+
+            {/* Accent color */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography level="title-lg" sx={{ mb: 0.5 }}>Accent color</Typography>
+                <Typography level="body-sm" sx={{ color: 'text.secondary', mb: 2 }}>
+                  Sets the color for buttons, chips, and highlights across your cafe.
+                </Typography>
+
+                {/* Preset swatches */}
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                  {['#0B6BCB', '#1B7D3A', '#C41C1C', '#7B1FA2', '#E65C00', '#00838F', '#37474F'].map((preset) => (
+                    <Box
+                      key={preset}
+                      onClick={() => setAccentColor(preset)}
+                      sx={{
+                        width: 36, height: 36, borderRadius: '50%', bgcolor: preset, cursor: 'pointer',
+                        border: accentColor === preset ? '3px solid white' : '3px solid transparent',
+                        boxShadow: accentColor === preset ? `0 0 0 2px ${preset}` : 'none',
+                        transition: 'all 0.15s',
+                        '&:hover': { transform: 'scale(1.15)' },
+                      }}
+                    />
+                  ))}
+                </Box>
+
+                {/* Custom hex input + color picker */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Box
+                    component="input"
+                    type="color"
+                    value={accentColor || '#0B6BCB'}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAccentColor(e.target.value)}
+                    style={{ width: 40, height: 40, padding: 2, border: '1px solid', borderColor: 'var(--joy-palette-divider)', borderRadius: 8, cursor: 'pointer', background: 'none' }}
+                  />
+                  <Input
+                    placeholder="#0B6BCB"
+                    value={accentColor}
+                    onChange={(e) => setAccentColor(e.target.value)}
+                    startDecorator={
+                      accentColor ? (
+                        <Box sx={{ width: 16, height: 16, borderRadius: '50%', bgcolor: accentColor, border: '1px solid', borderColor: 'divider' }} />
+                      ) : null
+                    }
+                    sx={{ flex: 1, fontFamily: 'monospace' }}
+                  />
+                  {accentColor && (
+                    <Button size="sm" variant="plain" color="neutral" onClick={() => setAccentColor('')}>
+                      Reset
+                    </Button>
+                  )}
+                </Box>
               </CardContent>
             </Card>
 

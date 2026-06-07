@@ -75,7 +75,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
             .get();
 
           const orderCount = ordersSnap.size;
-          const totalRevenue = ordersSnap.docs.reduce((sum, doc) => sum + (doc.data().totalAmount || 0), 0);
+          const totalRevenue = 0;
 
           if (orderCount > 0) {
             await cafeRoot.collection('store-sessions').doc(currentTempSessionId).update({

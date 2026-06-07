@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   if (!userId) return NextResponse.json({ error: 'Cafe not found' }, { status: 404 });
 
   const body = await req.json();
-  const { orderNumber, customerName, customerPhone, items, totalAmount, donation, orderDate, textOptIn } = body;
+  const { orderNumber, customerName, customerPhone, items, donation, orderDate, textOptIn } = body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return NextResponse.json({ error: 'Order must contain at least one item' }, { status: 400 });
@@ -56,7 +56,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     customerName: customerName || '',
     customerPhone: customerPhone || '',
     items,
-    totalAmount,
     donation,
     orderDate,
     textOptIn,

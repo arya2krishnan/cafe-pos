@@ -15,7 +15,6 @@ interface StorePerformance {
   startTime: string;
   endTime?: string;
   orderCount: number;
-  totalRevenue: number;
   itemStats: ItemStats[];
 }
 
@@ -68,7 +67,7 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
         const perf: StorePerformance[] = [];
         const legacy = orders.filter((o) => !o.storeNumber || o.storeNumber === 0);
         if (legacy.length > 0) {
-          perf.push({ storeNumber: 0, startTime: 'Legacy Data', orderCount: legacy.length, totalRevenue: legacy.reduce((s, o) => s + o.totalAmount, 0), itemStats: aggregateItemStats(legacy, items) });
+          perf.push({ storeNumber: 0, startTime: 'Legacy Data', orderCount: legacy.length, itemStats: aggregateItemStats(legacy, items) });
         }
         for (const session of sessions) {
           const storeRes = await api.getOrdersByStore(session.storeNumber);
@@ -114,7 +113,7 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
             {storePerformance[activeTab] && (
               <Box sx={{ mt: 3 }}>
                 <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid xs={12} sm={4}>
+                  <Grid xs={12} sm={6}>
                     <Card variant="outlined">
                       <CardContent>
                         <Typography level="body-sm" sx={{ color: 'text.secondary' }}>Orders</Typography>
@@ -122,15 +121,7 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
                       </CardContent>
                     </Card>
                   </Grid>
-                  <Grid xs={12} sm={4}>
-                    <Card variant="outlined">
-                      <CardContent>
-                        <Typography level="body-sm" sx={{ color: 'text.secondary' }}>Revenue</Typography>
-                        <Typography level="h2">${storePerformance[activeTab].totalRevenue.toFixed(2)}</Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                  <Grid xs={12} sm={4}>
+                  <Grid xs={12} sm={6}>
                     <Card variant="outlined">
                       <CardContent>
                         <Typography level="body-sm" sx={{ color: 'text.secondary' }}>Start</Typography>

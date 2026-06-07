@@ -44,14 +44,17 @@ export function createApiService(slug: string, getIdToken: () => Promise<string 
     getItems: (): Promise<ApiResponse<ItemData[]>> =>
       apiFetch<ItemData[]>(`${base}/items`).then((r) => {
         if (!r.success || !r.data) return r;
-        const transformed = r.data.map((item: any) => ({
-          ...item,
-          title: item.name,
-          soldOut: item.soldOut ?? false,
-          displayOrder: item.displayOrder ?? 999,
-          options: Array.isArray(item.options) ? item.options : [],
-          category: item.category || 'misc',
-        }));
+        const transformed = r.data.map((item: any) => {
+          const { price: _price, ...rest } = item;
+          return {
+            ...rest,
+            title: item.name,
+            soldOut: item.soldOut ?? false,
+            displayOrder: item.displayOrder ?? 999,
+            options: Array.isArray(item.options) ? item.options : [],
+            category: item.category || 'misc',
+          };
+        });
         return { success: true, data: transformed };
       }),
 

@@ -22,7 +22,7 @@ export async function PUT(
   if (ownerId !== userId) return unauthorized();
 
   const body = await req.json();
-  const allowed = ['soldOut', 'category', 'displayOrder', 'name', 'price', 'description', 'imageUrl', 'options'];
+  const allowed = ['soldOut', 'category', 'displayOrder', 'name', 'description', 'imageUrl', 'options'];
   const updates = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k)));
 
   const itemRef = cafeRef(db, userId).collection('items').doc(id);

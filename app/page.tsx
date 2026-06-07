@@ -7,7 +7,7 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import SmsIcon from '@mui/icons-material/Sms';
 
 const FEATURES = [
-  { icon: <CoffeeIcon sx={{ fontSize: 32 }} />, title: 'Easy menu', body: 'Add items with photos, prices, and options in seconds.' },
+  { icon: <CoffeeIcon sx={{ fontSize: 32 }} />, title: 'Easy menu', body: 'Add items with photos and options in seconds.' },
   { icon: <QrCode2Icon sx={{ fontSize: 32 }} />, title: 'Venmo tips', body: 'QR code on the order screen. Customers tip instantly.' },
   { icon: <SmsIcon sx={{ fontSize: 32 }} />, title: 'SMS alerts', body: 'Customers get a text when their order is ready.' },
   { icon: <InventoryIcon sx={{ fontSize: 32 }} />, title: 'Live orders', body: 'See incoming orders in real time. Mark complete with one tap.' },
