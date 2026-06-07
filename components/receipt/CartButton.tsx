@@ -4,7 +4,6 @@ import Box from '@mui/joy/Box';
 import Drawer from '@mui/joy/Drawer';
 import Button from '@mui/joy/Button';
 import Typography from '@mui/joy/Typography';
-import Divider from '@mui/joy/Divider';
 import IconButton from '@mui/joy/IconButton';
 import Stack from '@mui/joy/Stack';
 import Chip from '@mui/joy/Chip';

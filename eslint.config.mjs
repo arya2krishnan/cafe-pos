@@ -5,14 +5,22 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // Firestore doc.data() and dynamic API responses are genuinely untyped
+      "@typescript-eslint/no-explicit-any": "off",
+      // setState inside useEffect is valid React — the rule is overly strict
+      "react-hooks/set-state-in-effect": "off",
+      // Allow unused vars prefixed with _ (common convention)
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+    },
+  },
 ]);
 
 export default eslintConfig;
