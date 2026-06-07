@@ -69,7 +69,7 @@ export async function PATCH(req: NextRequest) {
   if (!userId) return unauthorized();
 
   const updates = await req.json();
-  const allowed = ['name', 'logoUrl', 'venmoUsername'];
+  const allowed = ['name', 'logoUrl', 'venmoUsername', 'customSmsMessage'];
   const filtered = Object.fromEntries(Object.entries(updates).filter(([k]) => allowed.includes(k)));
 
   const db = getDb();

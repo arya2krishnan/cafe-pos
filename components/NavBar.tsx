@@ -5,6 +5,7 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useCafe } from './CafeProvider';
 import { useAuth } from './AuthProvider';
@@ -26,6 +27,7 @@ export function NavBar({ slug, showAdminLinks = false }: NavBarProps) {
     { label: 'Orders', path: `/${slug}/orders`, icon: <ReceiptIcon /> },
     { label: 'Admin', path: `/${slug}/admin`, icon: <AdminPanelSettingsIcon /> },
     { label: 'Dashboard', path: `/${slug}/dashboard`, icon: <BarChartIcon /> },
+    { label: 'Settings', path: `/${slug}/settings`, icon: <SettingsIcon /> },
   ];
 
   const publicLinks = [

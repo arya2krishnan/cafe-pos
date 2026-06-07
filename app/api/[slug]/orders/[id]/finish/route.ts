@@ -32,11 +32,13 @@ export async function POST(
   const { customerPhone, customerName, orderNumber, textOptIn } = order;
 
   if (textOptIn && customerPhone) {
-    // Get cafe name for SMS
     const configDoc = await cafeRef(db, userId).collection('config').doc('main').get();
-    const cafeName = configDoc.exists ? (configDoc.data()?.name ?? 'Your Cafe') : 'Your Cafe';
+    const config = configDoc.data() ?? {};
+    const cafeName = config.name ?? 'Your Cafe';
+    const customSmsMessage = config.customSmsMessage ?? '';
 
-    const message = `${cafeName}:\nHello ${customerName}! Your order ${orderNumber} is ready!\nHead to the counter to pick it up!`;
+    const base = `${cafeName}:\nHello ${customerName}! Your order ${orderNumber} is ready!\nHead to the counter to pick it up!`;
+    const message = customSmsMessage ? `${base}\n\n${customSmsMessage}` : base;
     const textResult = await sendText(customerPhone, message);
 
     if (!textResult.success) {
