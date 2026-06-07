@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: 'Talina';
-  src: url('/fonts/TalinaDemo.otf') format('opentype');
+  font-family: 'Capriola';
+  src: url('/fonts/Capriola-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
 body {
-  font-family: 'Talina', Arial, Helvetica, sans-serif;
+  font-family: 'Capriola', Arial, Helvetica, sans-serif;
   background-color: var(--joy-palette-background-body);
   color: var(--joy-palette-text-primary);
 }

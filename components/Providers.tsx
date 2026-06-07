@@ -5,8 +5,8 @@ import { CssVarsProvider, extendTheme } from '@mui/joy/styles';
 
 const joyTheme = extendTheme({
   fontFamily: {
-    body: "'Talina', Arial, sans-serif",
-    display: "'Talina', Arial, sans-serif",
+    body: "'Capriola', Arial, sans-serif",
+    display: "'Capriola', Arial, sans-serif",
   },
 });
 import { AuthProvider } from './AuthProvider';
