@@ -7,7 +7,7 @@ export function useSettingsForm(
   slug: string,
   cafe: CafeConfig | null,
   getIdToken: () => Promise<string | null>,
-  refetchCafe: () => void,
+  updateCafe: (partial: Partial<CafeConfig>) => void,
 ) {
   const [cafeName, setCafeName] = useState('');
   const [venmoUsername, setVenmoUsername] = useState('');
@@ -103,7 +103,14 @@ export function useSettingsForm(
         throw new Error(err.error || 'Failed to save settings');
       }
 
-      refetchCafe();
+      updateCafe({
+        name: cafeName.trim(),
+        venmoUsername: venmoUsername.trim(),
+        logoUrl,
+        customSmsMessage: customSmsMessage.trim(),
+        accentColor: accentColor.trim(),
+        tipsEnabled,
+      });
       setSuccess(true);
       if (twilioUpdate.twilioAccountSid) {
         setTwilioSid('');

@@ -22,7 +22,5 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
 
   const { safe, hasTwilioCreds } = stripTwilioCreds(configDoc.data() ?? {});
 
-  const response = NextResponse.json({ ...safe, hasTwilioCreds });
-  response.headers.set('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
-  return response;
+  return NextResponse.json({ ...safe, hasTwilioCreds });
 }

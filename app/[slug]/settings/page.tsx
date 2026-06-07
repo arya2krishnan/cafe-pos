@@ -20,11 +20,11 @@ import { use } from 'react';
 export default function SettingsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const { user, loading, getIdToken } = useAuth();
-  const { cafe, refetch } = useCafe();
+  const { cafe, updateCafe } = useCafe();
   const router = useRouter();
 
   const { file: logoFile, preview: logoPreview, inputRef: logoInputRef, handleChange: handleLogoChange } = useLogoUpload();
-  const form = useSettingsForm(slug, cafe, getIdToken, refetch);
+  const form = useSettingsForm(slug, cafe, getIdToken, updateCafe);
 
   useEffect(() => {
     if (!loading && !user) router.replace(`/login?next=/${slug}/settings`);

@@ -6,16 +6,15 @@ interface CafeContextValue {
   cafe: CafeConfig | null;
   loading: boolean;
   error: string | null;
-  refetch: () => void;
+  updateCafe: (partial: Partial<CafeConfig>) => void;
 }
 
-const CafeContext = createContext<CafeContextValue>({ cafe: null, loading: true, error: null, refetch: () => {} });
+const CafeContext = createContext<CafeContextValue>({ cafe: null, loading: true, error: null, updateCafe: () => {} });
 
 export function CafeProvider({ slug, children }: { slug: string; children: ReactNode }) {
   const [cafe, setCafe] = useState<CafeConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     fetch(`/api/${slug}/config`)
@@ -26,11 +25,12 @@ export function CafeProvider({ slug, children }: { slug: string; children: React
       })
       .catch(() => setError('Failed to load cafe config'))
       .finally(() => setLoading(false));
-  }, [slug, tick]);
+  }, [slug]);
 
-  const refetch = () => setTick((t) => t + 1);
+  const updateCafe = (partial: Partial<CafeConfig>) =>
+    setCafe((prev) => prev ? { ...prev, ...partial } : prev);
 
-  return <CafeContext.Provider value={{ cafe, loading, error, refetch }}>{children}</CafeContext.Provider>;
+  return <CafeContext.Provider value={{ cafe, loading, error, updateCafe }}>{children}</CafeContext.Provider>;
 }
 
 export const useCafe = () => useContext(CafeContext);
