@@ -18,6 +18,7 @@ export default function OrdersPage({ params }: { params: Promise<{ slug: string 
   const router = useRouter();
   const api = createApiService(slug, getIdToken);
 
+  const [mounted, setMounted] = useState(false);
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +26,8 @@ export default function OrdersPage({ params }: { params: Promise<{ slug: string 
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<{ id: string; number: number } | null>(null);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -78,7 +81,7 @@ export default function OrdersPage({ params }: { params: Promise<{ slug: string 
     finally { setIsLoading(false); }
   };
 
-  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', pt: 10 }}><CircularProgress /></Box>;
+  if (!mounted || loading) return <Box sx={{ display: 'flex', justifyContent: 'center', pt: 10 }}><CircularProgress /></Box>;
 
   return (
     <>

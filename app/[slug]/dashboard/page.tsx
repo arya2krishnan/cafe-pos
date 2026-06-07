@@ -125,7 +125,14 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
                     <Card variant="outlined">
                       <CardContent>
                         <Typography level="body-sm" sx={{ color: 'text.secondary' }}>Start</Typography>
-                        <Typography level="body-md">{storePerformance[activeTab].startTime}</Typography>
+                        <Typography level="body-md">
+                          {storePerformance[activeTab].startTime === 'Legacy Data'
+                            ? 'Legacy Data'
+                            : new Date(storePerformance[activeTab].startTime).toLocaleString(undefined, {
+                                month: 'short', day: 'numeric', year: 'numeric',
+                                hour: 'numeric', minute: '2-digit',
+                              })}
+                        </Typography>
                       </CardContent>
                     </Card>
                   </Grid>

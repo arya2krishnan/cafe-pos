@@ -1,10 +1,11 @@
 'use client';
-import Snackbar from '@mui/joy/Snackbar';
+import Modal from '@mui/joy/Modal';
+import ModalDialog from '@mui/joy/ModalDialog';
 import Button from '@mui/joy/Button';
 import Stack from '@mui/joy/Stack';
 import Typography from '@mui/joy/Typography';
 import Box from '@mui/joy/Box';
-import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb';
+import Divider from '@mui/joy/Divider';
 import { VenmoQR } from '../VenmoQR';
 import { useCafe } from '../CafeProvider';
 
@@ -15,45 +16,43 @@ interface OrderNumberProps {
   orderNumber: number;
 }
 
-export default function OrderNumber(props: OrderNumberProps) {
+export default function OrderNumber({ open, onClose, name, orderNumber }: OrderNumberProps) {
   const { cafe } = useCafe();
 
   return (
-    <Snackbar
-      autoHideDuration={10000}
-      variant="solid"
-      color="primary"
-      size="lg"
-      invertedColors
-      open={props.open}
-      onClose={props.onClose}
-      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      sx={(theme) => ({
-        background: `linear-gradient(45deg, ${theme.palette.primary[600]} 30%, ${theme.palette.primary[500]} 90%)`,
-        maxWidth: '400px',
-        width: '90vw',
-      })}
-    >
-      <Stack spacing={2} sx={{ width: '100%', alignItems: 'center' }}>
-        <Typography level="title-lg">You are Order No. {props.orderNumber}</Typography>
-        <Typography>Thank you for your order, {props.name}!</Typography>
+    <Modal open={open} onClose={onClose}>
+      <ModalDialog
+        variant="outlined"
+        sx={{
+          maxWidth: 400,
+          width: '90vw',
+          textAlign: 'center',
+          p: 4,
+          gap: 2,
+        }}
+      >
+        <Typography level="h2" sx={{ fontWeight: 'bold' }}>
+          You are Order No. {orderNumber}
+        </Typography>
+
+        <Typography level="body-lg" sx={{ color: 'text.secondary' }}>
+          Thank you for your order, {name}!
+        </Typography>
 
         {cafe?.venmoUsername && (
-          <Box sx={{ my: 1 }}>
-            <VenmoQR venmoUsername={cafe.venmoUsername} size={100} label="Tip on Venmo" />
-          </Box>
+          <>
+            <Divider />
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+              <VenmoQR venmoUsername={cafe.venmoUsername} size={140} label="Tip on Venmo" />
+            </Box>
+            <Divider />
+          </>
         )}
 
-        <Button
-          variant="solid"
-          color="primary"
-          onClick={props.onClose}
-          startDecorator={<DoNotDisturbIcon />}
-          sx={{ width: '100%' }}
-        >
+        <Button variant="solid" color="neutral" size="lg" onClick={onClose} sx={{ mt: 1 }}>
           Close
         </Button>
-      </Stack>
-    </Snackbar>
+      </ModalDialog>
+    </Modal>
   );
 }
