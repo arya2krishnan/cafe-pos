@@ -12,7 +12,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider theme={materialTheme}>
       <AuthProvider>
-        <CssVarsProvider>{children}</CssVarsProvider>
+        <CssVarsProvider defaultMode="dark">{children}</CssVarsProvider>
       </AuthProvider>
     </ThemeProvider>
   );

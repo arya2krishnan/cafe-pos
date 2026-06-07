@@ -8,7 +8,7 @@ import SmsIcon from '@mui/icons-material/Sms';
 
 const FEATURES = [
   { icon: <CoffeeIcon sx={{ fontSize: 32 }} />, title: 'Easy menu', body: 'Add items with photos, prices, and options in seconds.' },
-  { icon: <QrCode2Icon sx={{ fontSize: 32 }} />, title: 'Venmo tips', body: 'QR code on the order screen — customers tip instantly.' },
+  { icon: <QrCode2Icon sx={{ fontSize: 32 }} />, title: 'Venmo tips', body: 'QR code on the order screen. Customers tip instantly.' },
   { icon: <SmsIcon sx={{ fontSize: 32 }} />, title: 'SMS alerts', body: 'Customers get a text when their order is ready.' },
   { icon: <InventoryIcon sx={{ fontSize: 32 }} />, title: 'Live orders', body: 'See incoming orders in real time. Mark complete with one tap.' },
 ];
@@ -26,7 +26,7 @@ export default function LandingPage() {
         </Typography>
 
         <Typography level="body-lg" sx={{ maxWidth: 480, color: 'text.secondary', mb: 5, lineHeight: 1.7 }}>
-          A point-of-sale for home cafes. Set up your menu, take orders, and accept Venmo tips — in minutes.
+          A point-of-sale for home cafes. Set up your menu, take orders, and accept Venmo tips in minutes.
         </Typography>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

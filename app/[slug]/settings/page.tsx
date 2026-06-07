@@ -176,7 +176,7 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
               <CardContent>
                 <Typography level="title-lg" sx={{ mb: 0.5 }}>SMS message</Typography>
                 <Typography level="body-sm" sx={{ color: 'text.secondary', mb: 2 }}>
-                  The standard message is always sent. Add a personal touch below — it appears after.
+                  The standard message is always sent. Add a personal touch below, it appears after.
                 </Typography>
 
                 {/* Preview of the standard message */}

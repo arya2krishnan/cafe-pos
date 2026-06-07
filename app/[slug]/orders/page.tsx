@@ -58,7 +58,7 @@ export default function OrdersPage({ params }: { params: Promise<{ slug: string 
     try {
       const res = await api.finishOrder(orderId);
       if (res.success) {
-        if (res.data?.textOptIn === false) alert('Order complete — no SMS (customer opted out). Call out the name!');
+        if (res.data?.textOptIn === false) alert('Order complete. No SMS (customer opted out) - call out the name!');
         else if (res.data?.textError) alert('Order complete but SMS failed. Call out the name!');
         if (isShopOpen) await fetchOrders();
       } else setError(res.error || 'Failed to complete order');
