@@ -47,3 +47,19 @@ export function getAuth() {
 export function cafeRef(db: admin.firestore.Firestore, userId: string) {
   return db.collection('cafes').doc(userId);
 }
+
+// In-memory slug→userId cache. Survives across requests on the same warm
+// serverless instance, cutting the extra Firestore read on every API call.
+const slugCache = new Map<string, string>();
+
+export async function getUserIdForSlug(
+  db: admin.firestore.Firestore,
+  slug: string,
+): Promise<string | null> {
+  if (slugCache.has(slug)) return slugCache.get(slug)!;
+  const doc = await db.collection('slugs').doc(slug).get();
+  if (!doc.exists) return null;
+  const userId = (doc.data() as { userId: string }).userId;
+  slugCache.set(slug, userId);
+  return userId;
+}

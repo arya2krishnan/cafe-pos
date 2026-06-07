@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, cafeRef } from '@/lib/firebase-admin';
+import { getDb, cafeRef, getUserIdForSlug } from '@/lib/firebase-admin';
 import { verifyIdToken, unauthorized } from '@/lib/withAuth';
 
-async function getOwnerIdForSlug(db: ReturnType<typeof getDb>, slug: string): Promise<string | null> {
-  const slugDoc = await db.collection('slugs').doc(slug).get();
-  if (!slugDoc.exists) return null;
-  return (slugDoc.data() as { userId: string }).userId;
-}
 
 // GET /api/[slug]/shop — public
 export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const db = getDb();
-  const userId = await getOwnerIdForSlug(db, slug);
+  const userId = await getUserIdForSlug(db, slug);
   if (!userId) return NextResponse.json({ error: 'Cafe not found' }, { status: 404 });
 
   const shopDoc = await cafeRef(db, userId).collection('shop').doc('status').get();
@@ -27,7 +22,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   if (!userId) return unauthorized();
 
   const db = getDb();
-  const ownerId = await getOwnerIdForSlug(db, slug);
+  const ownerId = await getUserIdForSlug(db, slug);
   if (ownerId !== userId) return unauthorized();
 
   const { isOpen } = await req.json();

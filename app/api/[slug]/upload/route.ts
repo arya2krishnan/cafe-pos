@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, getStorage, cafeRef } from '@/lib/firebase-admin';
+import { getDb, getStorage, cafeRef, getUserIdForSlug } from '@/lib/firebase-admin';
 import { verifyIdToken, unauthorized } from '@/lib/withAuth';
 import { v4 as uuidv4 } from 'uuid';
 
-async function getOwnerIdForSlug(db: ReturnType<typeof getDb>, slug: string): Promise<string | null> {
-  const slugDoc = await db.collection('slugs').doc(slug).get();
-  if (!slugDoc.exists) return null;
-  return (slugDoc.data() as { userId: string }).userId;
-}
 
 // POST /api/[slug]/upload — base64 image upload for an item
 export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
@@ -16,7 +11,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   if (!userId) return unauthorized();
 
   const db = getDb();
-  const ownerId = await getOwnerIdForSlug(db, slug);
+  const ownerId = await getUserIdForSlug(db, slug);
   if (ownerId !== userId) return unauthorized();
 
   const { itemId, base64Data, filename, mimeType } = await req.json();

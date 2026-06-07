@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, cafeRef } from '@/lib/firebase-admin';
+import { getDb, cafeRef, getUserIdForSlug } from '@/lib/firebase-admin';
 import { verifyIdToken, unauthorized } from '@/lib/withAuth';
 
-async function getOwnerIdForSlug(db: ReturnType<typeof getDb>, slug: string): Promise<string | null> {
-  const slugDoc = await db.collection('slugs').doc(slug).get();
-  if (!slugDoc.exists) return null;
-  return (slugDoc.data() as { userId: string }).userId;
-}
 
 // GET /api/[slug]/sessions/[storeNumber] — orders for a specific session
 export async function GET(
@@ -18,7 +13,7 @@ export async function GET(
   if (!userId) return unauthorized();
 
   const db = getDb();
-  const ownerId = await getOwnerIdForSlug(db, slug);
+  const ownerId = await getUserIdForSlug(db, slug);
   if (ownerId !== userId) return unauthorized();
 
   const storeNum = parseInt(storeNumber);

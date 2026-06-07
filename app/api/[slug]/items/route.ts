@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, cafeRef } from '@/lib/firebase-admin';
+import { getDb, cafeRef, getUserIdForSlug } from '@/lib/firebase-admin';
 import { verifyIdToken, unauthorized } from '@/lib/withAuth';
 
-async function getUserIdForSlug(db: ReturnType<typeof getDb>, slug: string): Promise<string | null> {
-  const slugDoc = await db.collection('slugs').doc(slug).get();
-  if (!slugDoc.exists) return null;
-  return (slugDoc.data() as { userId: string }).userId;
-}
 
 // GET /api/[slug]/items — public
 export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {

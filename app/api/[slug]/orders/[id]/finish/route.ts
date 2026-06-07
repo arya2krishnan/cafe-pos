@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, cafeRef } from '@/lib/firebase-admin';
+import { getDb, cafeRef, getUserIdForSlug } from '@/lib/firebase-admin';
 import { verifyIdToken, unauthorized } from '@/lib/withAuth';
 import { sendText } from '@/lib/twilio';
 
-async function getOwnerIdForSlug(db: ReturnType<typeof getDb>, slug: string): Promise<string | null> {
-  const slugDoc = await db.collection('slugs').doc(slug).get();
-  if (!slugDoc.exists) return null;
-  return (slugDoc.data() as { userId: string }).userId;
-}
 
 // POST /api/[slug]/orders/[id]/finish
 export async function POST(
@@ -19,7 +14,7 @@ export async function POST(
   if (!userId) return unauthorized();
 
   const db = getDb();
-  const ownerId = await getOwnerIdForSlug(db, slug);
+  const ownerId = await getUserIdForSlug(db, slug);
   if (ownerId !== userId) return unauthorized();
 
   const orderRef = cafeRef(db, userId).collection('orders').doc(id);
