@@ -6,14 +6,16 @@ interface CafeContextValue {
   cafe: CafeConfig | null;
   loading: boolean;
   error: string | null;
+  refetch: () => void;
 }
 
-const CafeContext = createContext<CafeContextValue>({ cafe: null, loading: true, error: null });
+const CafeContext = createContext<CafeContextValue>({ cafe: null, loading: true, error: null, refetch: () => {} });
 
 export function CafeProvider({ slug, children }: { slug: string; children: ReactNode }) {
   const [cafe, setCafe] = useState<CafeConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     fetch(`/api/${slug}/config`)
@@ -24,9 +26,11 @@ export function CafeProvider({ slug, children }: { slug: string; children: React
       })
       .catch(() => setError('Failed to load cafe config'))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, tick]);
 
-  return <CafeContext.Provider value={{ cafe, loading, error }}>{children}</CafeContext.Provider>;
+  const refetch = () => setTick((t) => t + 1);
+
+  return <CafeContext.Provider value={{ cafe, loading, error, refetch }}>{children}</CafeContext.Provider>;
 }
 
 export const useCafe = () => useContext(CafeContext);

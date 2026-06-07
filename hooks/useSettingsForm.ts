@@ -7,6 +7,7 @@ export function useSettingsForm(
   slug: string,
   cafe: CafeConfig | null,
   getIdToken: () => Promise<string | null>,
+  refetchCafe: () => void,
 ) {
   const [cafeName, setCafeName] = useState('');
   const [venmoUsername, setVenmoUsername] = useState('');
@@ -102,6 +103,7 @@ export function useSettingsForm(
         throw new Error(err.error || 'Failed to save settings');
       }
 
+      refetchCafe();
       setSuccess(true);
       if (twilioUpdate.twilioAccountSid) {
         setTwilioSid('');
