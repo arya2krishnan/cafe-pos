@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // All Firestore access goes through Next.js API routes using the Firebase Admin SDK,
+    // which bypasses these rules entirely. Denying all direct client access is correct
+    // and safe — nothing in the app reads/writes Firestore from the browser.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
