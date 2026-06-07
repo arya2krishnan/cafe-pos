@@ -1,4 +1,4 @@
-# Cafe POS
+# At Home Cafe Point of Sale
 
 A multi-tenant point-of-sale system for small cafes. Each cafe gets its own storefront, admin panel, and order management — all under a single deployment.
 
