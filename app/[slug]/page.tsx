@@ -1,0 +1,192 @@
+'use client';
+import { Typography, Alert, CircularProgress, Box } from '@mui/joy';
+import ItemGrid from '@/components/items/ItemGrid';
+import CartButton from '@/components/receipt/CartButton';
+import { useCartStore } from '@/store/cartStore';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import UserInput from '@/components/user/UserInput';
+import OrderNumber from '@/components/user/OrderNumber';
+import { createApiService } from '@/lib/api-client';
+import { NavBar } from '@/components/NavBar';
+import { VenmoQR } from '@/components/VenmoQR';
+import { useCafe } from '@/components/CafeProvider';
+import { useAuth } from '@/components/AuthProvider';
+import { ItemData } from '@/types';
+import { Fireworks } from '@fireworks-js/react';
+import type { FireworksHandlers } from '@fireworks-js/react';
+import { use } from 'react';
+
+export default function POSPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
+  const { cafe } = useCafe();
+  const { getIdToken } = useAuth();
+  const api = createApiService(slug, getIdToken);
+
+  const cartItems = useCartStore((s) => s.items);
+  const removeItem = useCartStore((s) => s.removeItem);
+  const clearCart = useCartStore((s) => s.clearCart);
+  const getTotalPrice = useCartStore((s) => s.getTotalPrice);
+  const updateQuantity = useCartStore((s) => s.updateQuantity);
+
+  const [items, setItems] = useState<ItemData[]>([]);
+  const [itemsLoading, setItemsLoading] = useState(true);
+  const [itemsError, setItemsError] = useState('');
+  const [isUserInputOpen, setIsUserInputOpen] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [userPhone, setUserPhone] = useState('');
+  const [textOptIn, setTextOptIn] = useState(true);
+  const [isOrderNumberOpen, setIsOrderNumberOpen] = useState(false);
+  const [orderNumber, setOrderNumber] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showFireworks, setShowFireworks] = useState(false);
+  const fireworksRef = useRef<FireworksHandlers>(null);
+
+  const fetchItems = useCallback(async () => {
+    setItemsLoading(true);
+    setItemsError('');
+    try {
+      const res = await api.getItems();
+      if (res.success && res.data) setItems(res.data as ItemData[]);
+      else setItemsError(res.error || 'Failed to fetch items');
+    } catch { setItemsError('Unexpected error fetching items'); }
+    finally { setItemsLoading(false); }
+  }, [slug]);
+
+  useEffect(() => { fetchItems(); }, [fetchItems]);
+
+  useEffect(() => {
+    if (showFireworks && fireworksRef.current) {
+      for (let i = 0; i < 5; i++) setTimeout(() => fireworksRef.current?.launch(1), i * 200);
+      const t = setTimeout(() => setShowFireworks(false), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [showFireworks]);
+
+  const handleCheckout = async () => {
+    if (cartItems.length === 0) { alert('Your cart is empty.'); return; }
+    setIsLoading(true);
+    try {
+      const status = await api.getShopStatus();
+      if (!status.success || !status.data?.isOpen) {
+        alert('Sorry, the store is currently closed. Please come back later.');
+        return;
+      }
+      setIsUserInputOpen(true);
+    } catch { setErrorMessage('Unable to verify shop status. Please try again.'); }
+    finally { setIsLoading(false); }
+  };
+
+  const processOrder = async (customerName = userName, customerPhone = userPhone, optIn = textOptIn) => {
+    setIsLoading(true);
+    setErrorMessage('');
+    try {
+      if (!customerName.trim() && !customerPhone.trim()) {
+        setErrorMessage('Customer name or phone number is required.');
+        return;
+      }
+      const status = await api.getShopStatus();
+      if (!status.success || !status.data?.isOpen) {
+        alert('The store has closed. Your order cannot be processed.');
+        return;
+      }
+      const generatedOrderNumber = Math.floor(Math.random() * 900) + 100;
+      setOrderNumber(generatedOrderNumber);
+
+      const res = await api.submitOrder({
+        orderNumber: generatedOrderNumber,
+        customerName,
+        customerPhone,
+        textOptIn: optIn,
+        items: cartItems,
+        totalAmount: getTotalPrice(),
+        orderDate: new Date().toISOString(),
+        donation: { donated: false, amount: 0 },
+      });
+
+      if (res.success) {
+        setShowFireworks(true);
+        setIsOrderNumberOpen(true);
+        await fetchItems();
+        clearCart();
+      } else {
+        setErrorMessage(res.error || 'Failed to place order');
+      }
+    } catch { setErrorMessage('An unexpected error occurred'); }
+    finally { setIsLoading(false); }
+  };
+
+  return (
+    <>
+      <NavBar slug={slug} showAdminLinks={false} />
+
+      <Box sx={{ pt: '64px', pb: 4, px: { xs: 2, md: 1 }, minHeight: 'calc(100vh - 64px)', bgcolor: 'background.body' }}>
+        <Box sx={{ px: { xs: 1, md: 1 } }}>
+          {/* Header */}
+          <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', mt: 2, mb: 3, gap: 2 }}>
+            {cafe?.logoUrl && (
+              <img src={cafe.logoUrl} alt={cafe.name} style={{ width: 80, height: 80, objectFit: 'contain' }} />
+            )}
+            <Typography level="h2" sx={{ fontWeight: 'bold', fontSize: { xs: '2.5rem', md: '3.5rem' }, textTransform: 'uppercase' }}>
+              {cafe?.name ?? ''}
+            </Typography>
+          </Box>
+
+          {itemsError && <Alert color="danger" sx={{ mb: 2 }}>{itemsError}</Alert>}
+          {errorMessage && <Alert color="danger" sx={{ mb: 2 }}>{errorMessage}</Alert>}
+          {isLoading && <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress /></Box>}
+
+          {itemsLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress /></Box>
+          ) : (
+            <ItemGrid items={items} />
+          )}
+
+          {/* Cart button */}
+          <Box sx={{ position: 'fixed', top: 64, right: 16, zIndex: 1050 }}>
+            <CartButton
+              items={cartItems}
+              totalPrice={getTotalPrice()}
+              onClick={handleCheckout}
+              onRemove={removeItem}
+              onDestroy={clearCart}
+              onQuantityChange={updateQuantity}
+            />
+          </Box>
+
+          {/* Venmo QR — bottom corner */}
+          {cafe?.venmoUsername && (
+            <Box sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 1000 }}>
+              <VenmoQR venmoUsername={cafe.venmoUsername} size={80} label="Tip" />
+            </Box>
+          )}
+
+          <UserInput
+            isOpen={isUserInputOpen}
+            name={userName}
+            phone={userPhone}
+            onClick={(n, p, opt) => { setUserName(n); setUserPhone(p); setTextOptIn(opt); setTimeout(() => processOrder(n, p, opt), 100); }}
+            onClose={() => setIsUserInputOpen(false)}
+          />
+
+          <OrderNumber
+            open={isOrderNumberOpen}
+            onClose={() => { setIsOrderNumberOpen(false); setUserName(''); setUserPhone(''); setTextOptIn(true); }}
+            name={userName}
+            orderNumber={orderNumber}
+          />
+        </Box>
+      </Box>
+
+      {showFireworks && (
+        <Box sx={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, pointerEvents: 'none' }}>
+          <Fireworks
+            ref={fireworksRef}
+            options={{ rocketsPoint: { min: 0, max: 100 } }}
+            style={{ top: 0, left: 0, width: '100%', height: '100%', position: 'fixed', background: 'transparent' }}
+          />
+        </Box>
+      )}
+    </>
+  );
+}
