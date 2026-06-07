@@ -1,10 +1,12 @@
 'use client';
-import { Box, Typography, FormControl, FormLabel, Input, Button, Alert, Stack, Link } from '@mui/joy';
+import { Box, Typography, FormControl, FormLabel, Input, Button, Alert, Stack, Link, Divider } from '@mui/joy';
 import { useState, useEffect, Suspense } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase-client';
+import { signInWithGoogle } from '@/lib/google-auth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
+import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 import CoffeeIcon from '@mui/icons-material/Coffee';
 import NextLink from 'next/link';
 
@@ -17,6 +19,7 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const next = params.get('next') || null;
 
@@ -39,13 +42,29 @@ function LoginForm() {
         const data = await res.json();
         router.replace(next || `/${data.slug}/orders`);
       } else {
-        router.replace('/');
+        router.replace('/setup');
       }
     } catch (err: any) {
-      const msg = err?.code === 'auth/invalid-credential' ? 'Invalid email or password' : 'Sign in failed';
-      setError(msg);
+      setError(err?.code === 'auth/invalid-credential' ? 'Invalid email or password' : 'Sign in failed');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError('');
+    setIsGoogleLoading(true);
+    try {
+      const result = await signInWithGoogle();
+      if (result.isNewCafe) {
+        router.replace('/setup');
+      } else {
+        router.replace(next || `/${result.slug}/orders`);
+      }
+    } catch (err: any) {
+      setError(err?.code === 'auth/popup-closed-by-user' ? '' : 'Google sign-in failed');
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -61,6 +80,10 @@ function LoginForm() {
         </Stack>
 
         {error && <Alert color="danger" sx={{ mb: 2 }}>{error}</Alert>}
+
+        <GoogleSignInButton onClick={handleGoogle} loading={isGoogleLoading} />
+
+        <Divider sx={{ my: 2.5 }}>or</Divider>
 
         <form onSubmit={handleSubmit}>
           <Stack spacing={2}>
