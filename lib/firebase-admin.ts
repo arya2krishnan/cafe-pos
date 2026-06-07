@@ -18,11 +18,20 @@ function getAdminApp(): admin.app.App {
   });
 }
 
+// Cache the db instance — calling db.settings() more than once on the same
+// Firestore instance throws "settings can no longer be changed".
+let _db: admin.firestore.Firestore | null = null;
+
 export function getDb() {
+  if (_db) return _db;
   const app = getAdminApp();
-  const db = admin.firestore(app);
-  db.settings({ ignoreUndefinedProperties: true });
-  return db;
+  _db = admin.firestore(app);
+  try {
+    _db.settings({ ignoreUndefinedProperties: true });
+  } catch {
+    // Already set on a previous call — safe to ignore
+  }
+  return _db;
 }
 
 export function getStorage() {
@@ -35,7 +44,6 @@ export function getAuth() {
   return admin.auth(app);
 }
 
-// Returns the Firestore subcollection root for a given userId
 export function cafeRef(db: admin.firestore.Firestore, userId: string) {
   return db.collection('cafes').doc(userId);
 }

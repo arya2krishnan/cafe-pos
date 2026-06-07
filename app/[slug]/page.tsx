@@ -8,7 +8,7 @@ import UserInput from '@/components/user/UserInput';
 import OrderNumber from '@/components/user/OrderNumber';
 import { createApiService } from '@/lib/api-client';
 import { NavBar } from '@/components/NavBar';
-import { VenmoQR } from '@/components/VenmoQR';
+import DonationButton from '@/components/DonationButton';
 import { useCafe } from '@/components/CafeProvider';
 import { useAuth } from '@/components/AuthProvider';
 import { ItemData } from '@/types';
@@ -154,12 +154,7 @@ export default function POSPage({ params }: { params: Promise<{ slug: string }> 
             />
           </Box>
 
-          {/* Venmo QR — bottom corner */}
-          {cafe?.venmoUsername && (
-            <Box sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 1000 }}>
-              <VenmoQR venmoUsername={cafe.venmoUsername} size={80} label="Tip" />
-            </Box>
-          )}
+          <DonationButton />
 
           <UserInput
             isOpen={isUserInputOpen}
