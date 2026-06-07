@@ -13,6 +13,7 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: 'Home Cafe POS',
   description: 'Point of sale for home cafes',
+  icons: { icon: '/favicon-default.svg' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
