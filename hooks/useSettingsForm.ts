@@ -15,6 +15,7 @@ export function useSettingsForm(
   const [twilioSid, setTwilioSid] = useState('');
   const [twilioToken, setTwilioToken] = useState('');
   const [twilioPhone, setTwilioPhone] = useState('');
+  const [tipsEnabled, setTipsEnabled] = useState(true);
   const [hasTwilioCreds, setHasTwilioCreds] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -26,6 +27,7 @@ export function useSettingsForm(
       setVenmoUsername(cafe.venmoUsername);
       setCustomSmsMessage(cafe.customSmsMessage ?? '');
       setAccentColor(cafe.accentColor ?? '');
+      setTipsEnabled(cafe.tipsEnabled ?? true);
       setHasTwilioCreds(cafe.hasTwilioCreds ?? false);
     }
   }, [cafe]);
@@ -90,6 +92,7 @@ export function useSettingsForm(
           logoUrl,
           customSmsMessage: customSmsMessage.trim(),
           accentColor: accentColor.trim(),
+          tipsEnabled,
           ...twilioUpdate,
         }),
       });
@@ -121,6 +124,7 @@ export function useSettingsForm(
     venmoUsername, setVenmoUsername,
     customSmsMessage, setCustomSmsMessage,
     accentColor, setAccentColor,
+    tipsEnabled, setTipsEnabled,
     twilioSid, setTwilioSid,
     twilioToken, setTwilioToken,
     twilioPhone, setTwilioPhone,

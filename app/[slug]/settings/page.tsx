@@ -1,7 +1,7 @@
 'use client';
 import {
   Box, Typography, FormControl, FormLabel, Input, Button,
-  Alert, Stack, Card, CardContent, Chip, Link,
+  Alert, Stack, Card, CardContent, Chip, Link, Switch,
 } from '@mui/joy';
 import { useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
@@ -80,6 +80,24 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
                     </Box>
                   </FormControl>
                 </Stack>
+              </CardContent>
+            </Card>
+
+            <Card variant="outlined">
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography level="title-lg">Tips QR code</Typography>
+                    <Typography level="body-sm" sx={{ color: 'text.secondary', mt: 0.25 }}>
+                      Show a Venmo QR code on the order confirmation screen.
+                    </Typography>
+                  </Box>
+                  <Switch
+                    checked={form.tipsEnabled}
+                    onChange={(e) => form.setTipsEnabled(e.target.checked)}
+                    color={form.tipsEnabled ? 'success' : 'neutral'}
+                  />
+                </Box>
               </CardContent>
             </Card>
 

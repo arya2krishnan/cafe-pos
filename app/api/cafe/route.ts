@@ -69,7 +69,7 @@ export async function PATCH(req: NextRequest) {
   if (!userId) return unauthorized();
 
   const updates = await req.json();
-  const allowed = ['name', 'logoUrl', 'venmoUsername', 'customSmsMessage', 'accentColor', 'twilioAccountSid', 'twilioAuthToken', 'twilioPhoneNumber'];
+  const allowed = ['name', 'logoUrl', 'venmoUsername', 'customSmsMessage', 'accentColor', 'tipsEnabled', 'twilioAccountSid', 'twilioAuthToken', 'twilioPhoneNumber'];
   const filtered = Object.fromEntries(Object.entries(updates).filter(([k]) => allowed.includes(k)));
 
   const db = getDb();

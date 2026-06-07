@@ -38,7 +38,7 @@ export default function OrderNumber({ open, onClose, name, orderNumber }: OrderN
           Thank you for your order, {name}!
         </Typography>
 
-        {cafe?.venmoUsername && (
+        {cafe?.venmoUsername && cafe?.tipsEnabled !== false && (
           <>
             <Divider />
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>

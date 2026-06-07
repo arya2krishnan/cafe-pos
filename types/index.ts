@@ -60,6 +60,7 @@ export interface CafeConfig {
   userId: string;
   customSmsMessage?: string;
   accentColor?: string;
+  tipsEnabled?: boolean;
   // Per-cafe Twilio — never sent to the browser, server-only
   twilioAccountSid?: string;
   twilioAuthToken?: string;
