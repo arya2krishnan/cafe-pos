@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cafe POS
+
+A multi-tenant point-of-sale system for small cafes. Each cafe gets its own storefront, admin panel, and order management — all under a single deployment.
+
+## Features
+
+- **Multi-tenant** — one deployment, unlimited cafes, each at `/{slug}`
+- **Menu management** — items with images, options, categories, and sold-out toggles
+- **Live orders** — real-time order queue with auto-polling and SMS notifications
+- **Cart & checkout** — customer-facing ordering flow with quantity control and item options
+- **Settings** — per-cafe accent color, logo, Venmo tips QR, and Twilio SMS credentials
+- **Google & email auth** — Firebase Authentication with per-tenant ownership
+- **Session tracking** — store sessions with order counts and history
+
+## Stack
+
+- [Next.js](https://nextjs.org) (App Router)
+- [MUI Joy UI](https://mui.com/joy-ui/getting-started/)
+- [Firebase](https://firebase.google.com) — Firestore, Auth, Storage
+- [Zustand](https://github.com/pmndrs/zustand) — cart state
+- [Twilio](https://twilio.com) — optional SMS notifications
 
 ## Getting Started
 
-First, run the development server:
+### 1. Clone and install
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/arya2krishnan/cafe-pos.git
+cd cafe-pos
+yarn install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Set up Firebase
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Create a [Firebase project](https://console.firebase.google.com)
+2. Enable **Firestore**, **Authentication** (Email/Password + Google), and **Storage**
+3. Generate a service account key: Project Settings → Service Accounts → Generate new private key
+4. Copy your web app config: Project Settings → General → Your apps
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Configure environment variables
 
-## Learn More
+```bash
+cp .env.example .env.local
+```
 
-To learn more about Next.js, take a look at the following resources:
+Fill in `.env.local` with your Firebase credentials. For `FIREBASE_SERVICE_ACCOUNT_JSON`, paste the entire service account JSON as a single-line string.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Run locally
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+yarn dev
+```
 
-## Deploy on Vercel
+Open [http://localhost:3000](http://localhost:3000) and sign up to create your first cafe.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## SMS Notifications (optional)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Order-ready SMS notifications use Twilio. You can either:
+- Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_PHONE_NUMBER` in `.env.local` as a platform-wide default
+- Or let each cafe owner paste their own Twilio credentials in their Settings page
+
+See `/docs/sms-setup` in the running app for a step-by-step guide.
+
+## Project Structure
+
+```
+app/
+  [slug]/           # Per-cafe customer and admin pages
+  api/[slug]/       # Protected API routes (items, orders, categories, etc.)
+  api/cafe/         # Cafe creation and config
+  signup/ setup/    # Onboarding flow
+components/
+  admin/            # Item form, category management, item cards
+  common/           # Shared UI primitives (modals, quantity control, chips)
+  items/            # Customer-facing item grid and options modal
+  orders/           # Order card
+  receipt/          # Cart drawer
+  settings/         # Accent color picker, SMS preview
+hooks/              # Custom React hooks (data fetching, form state, scroll sync)
+lib/                # Firebase admin, auth utilities, API client
+```
+
+## License
+
+MIT
