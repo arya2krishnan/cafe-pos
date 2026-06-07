@@ -12,10 +12,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { use } from 'react';
 
-const CATEGORY_NAMES: Record<string, string> = {
-  e: 'Espresso', cb: 'Cold Brew', m: 'Matcha', sp: 'Specialty Coffee',
-  st: 'Standard', t: 'Specialty Tea', misc: 'Misc.',
-};
 
 export default function AdminPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -114,9 +110,7 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
         ) : (
           Object.entries(byCategory).map(([cat, catItems]) => (
             <Box key={cat} sx={{ mb: 4 }}>
-              <Typography level="h3" sx={{ mb: 2, fontWeight: 'bold' }}>
-                {CATEGORY_NAMES[cat] || cat}
-              </Typography>
+              <Typography level="h3" sx={{ mb: 2, fontWeight: 'bold' }}>{cat}</Typography>
               <Grid container spacing={2}>
                 {catItems.map((item) => (
                   <Grid key={String(item.id)} xs={12} sm={6} md={4} lg={3}>
@@ -134,9 +128,6 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <Box sx={{ flex: 1 }}>
                             <Typography level="title-md">{item.name}</Typography>
-                            <Typography level="title-sm" sx={{ color: 'primary.500', fontWeight: 'bold' }}>
-                              ${item.price.toFixed(2)}
-                            </Typography>
                             {item.description && (
                               <Typography level="body-xs" sx={{ mt: 0.5, color: 'text.secondary' }}>
                                 {item.description}
@@ -198,6 +189,7 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
         onClose={() => { setFormOpen(false); setEditingItem(undefined); }}
         onSubmit={handleCreateOrEdit}
         initialData={editingItem}
+        existingCategories={[...new Set(items.map((i) => i.category).filter(Boolean) as string[])]}
       />
     </>
   );

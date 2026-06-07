@@ -4,7 +4,7 @@ import { Button, Drawer, Box, Typography, IconButton, Stack } from '@mui/joy';
 import CloseIcon from '@mui/icons-material/Close';
 import { QRCodeSVG } from 'qrcode.react';
 import { useCafe } from './CafeProvider';
-import CoffeeIcon from '@mui/icons-material/Coffee';
+const SNOOPY_URL = 'https://firebasestorage.googleapis.com/v0/b/cafe-pos-gough.firebasestorage.app/o/site-image%2FsnoopyMoney.jpg?alt=media&token=8f672bc8-1607-45d8-9392-38d22bb49b19';
 
 export default function DonationButton() {
   const [open, setOpen] = useState(false);
@@ -41,12 +41,8 @@ export default function DonationButton() {
           },
         }}
       >
-        <Box sx={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '2px solid rgba(255,255,255,0.3)', bgcolor: 'background.level2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {cafe.logoUrl ? (
-            <img src={cafe.logoUrl} alt={cafe.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <CoffeeIcon sx={{ fontSize: 20, color: 'white' }} />
-          )}
+        <Box sx={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '2px solid rgba(255,255,255,0.3)' }}>
+          <img src={SNOOPY_URL} alt="Snoopy with money" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </Box>
         <Typography sx={{ fontWeight: 'bold', color: 'white', fontSize: '1rem', lineHeight: 1.2 }}>
           Leave a tip :)
@@ -66,11 +62,9 @@ export default function DonationButton() {
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-            {cafe.logoUrl && (
-              <Box sx={{ width: 52, height: 52, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
-                <img src={cafe.logoUrl} alt={cafe.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </Box>
-            )}
+            <Box sx={{ width: 56, height: 56, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+              <img src={SNOOPY_URL} alt="Snoopy with money" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </Box>
             <Typography level="body-md" sx={{ color: 'text.secondary' }}>
               Thanks for visiting {cafe.name}! Your tip helps keep the coffee flowing.
             </Typography>

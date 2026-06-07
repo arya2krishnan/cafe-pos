@@ -9,16 +9,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import ImageIcon from '@mui/icons-material/Image';
 import { ItemData } from '@/types';
 
-const CATEGORIES = [
-  { key: 'sp', label: 'Specialty Coffee' },
-  { key: 't', label: 'Specialty Tea' },
-  { key: 'st', label: 'Standard' },
-  { key: 'e', label: 'Espresso' },
-  { key: 'cb', label: 'Cold Brew' },
-  { key: 'm', label: 'Matcha' },
-  { key: 'misc', label: 'Misc.' },
-];
-
 interface OptionGroup {
   name: string;
   values: string[];
@@ -30,13 +20,13 @@ interface ItemFormProps {
   onClose: () => void;
   onSubmit: (data: Partial<ItemData>, imageFile?: File) => Promise<void>;
   initialData?: Partial<ItemData>;
+  existingCategories?: string[];
 }
 
-export default function ItemForm({ isOpen, onClose, onSubmit, initialData }: ItemFormProps) {
+export default function ItemForm({ isOpen, onClose, onSubmit, initialData, existingCategories = [] }: ItemFormProps) {
   const [name, setName] = useState(initialData?.name ?? '');
-  const [price, setPrice] = useState(initialData?.price?.toString() ?? '');
   const [description, setDescription] = useState(initialData?.description ?? '');
-  const [category, setCategory] = useState(initialData?.category ?? 'misc');
+  const [category, setCategory] = useState(initialData?.category ?? existingCategories[0] ?? '');
   const [options, setOptions] = useState<OptionGroup[]>(
     (initialData?.options as any[])?.map((o) => ({ name: o.name, values: o.values, isMultiple: o.isMultiple })) ?? [],
   );
@@ -44,6 +34,8 @@ export default function ItemForm({ isOpen, onClose, onSubmit, initialData }: Ite
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [newOptionName, setNewOptionName] = useState('');
   const [newOptionValue, setNewOptionValue] = useState<Record<number, string>>({});
+  const [newCategoryInput, setNewCategoryInput] = useState('');
+  const [localCategories, setLocalCategories] = useState<string[]>(existingCategories);
   const [isLoading, setIsLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -54,6 +46,16 @@ export default function ItemForm({ isOpen, onClose, onSubmit, initialData }: Ite
     const reader = new FileReader();
     reader.onload = () => setImagePreview(reader.result as string);
     reader.readAsDataURL(file);
+  };
+
+  const addCategory = () => {
+    const val = newCategoryInput.trim();
+    if (!val) return;
+    if (!localCategories.includes(val)) {
+      setLocalCategories((prev) => [...prev, val]);
+    }
+    setCategory(val);
+    setNewCategoryInput('');
   };
 
   const addOptionGroup = () => {
@@ -83,11 +85,11 @@ export default function ItemForm({ isOpen, onClose, onSubmit, initialData }: Ite
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !price) return;
+    if (!name.trim()) return;
     setIsLoading(true);
     try {
       await onSubmit(
-        { name: name.trim(), price: parseFloat(price), description: description.trim(), category, options: options as any },
+        { name: name.trim(), description: description.trim(), category: category || 'misc', options: options as any },
         imageFile ?? undefined,
       );
       onClose();
@@ -102,18 +104,20 @@ export default function ItemForm({ isOpen, onClose, onSubmit, initialData }: Ite
         <DialogTitle>{initialData ? 'Edit Item' : 'New Item'}</DialogTitle>
         <form onSubmit={handleSubmit}>
           <Stack spacing={2.5}>
-            {/* Image drop zone */}
+            {/* Image */}
             <Box
               onClick={() => fileRef.current?.click()}
               sx={{
                 border: '2px dashed', borderColor: 'divider', borderRadius: 'md',
                 height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', overflow: 'hidden', position: 'relative',
+                cursor: 'pointer', overflow: 'hidden',
                 '&:hover': { borderColor: 'primary.400', bgcolor: 'background.level1' },
               }}
             >
               {imagePreview ? (
                 <img src={imagePreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : initialData?.imageUrl ? (
+                <img src={initialData.imageUrl} alt="current" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 <Stack alignItems="center" spacing={0.5}>
                   <ImageIcon sx={{ fontSize: 40, color: 'text.tertiary' }} />
@@ -126,20 +130,7 @@ export default function ItemForm({ isOpen, onClose, onSubmit, initialData }: Ite
             {/* Name */}
             <FormControl required>
               <FormLabel>Item name</FormLabel>
-              <Input placeholder="e.g. Oat Milk Latte" value={name} onChange={(e) => setName(e.target.value)} />
-            </FormControl>
-
-            {/* Price */}
-            <FormControl required>
-              <FormLabel>Price</FormLabel>
-              <Input
-                type="number"
-                placeholder="0.00"
-                startDecorator="$"
-                slotProps={{ input: { step: '0.01', min: '0' } }}
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-              />
+              <Input placeholder="e.g. Oat Milk Latte" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
             </FormControl>
 
             {/* Description */}
@@ -148,28 +139,42 @@ export default function ItemForm({ isOpen, onClose, onSubmit, initialData }: Ite
               <Textarea minRows={2} placeholder="What's in it?" value={description} onChange={(e) => setDescription(e.target.value)} />
             </FormControl>
 
-            {/* Category */}
+            {/* Category — free-form */}
             <FormControl>
               <FormLabel>Category</FormLabel>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 0.5 }}>
-                {CATEGORIES.map((cat) => (
-                  <Chip
-                    key={cat.key}
-                    variant={category === cat.key ? 'solid' : 'outlined'}
-                    color={category === cat.key ? 'primary' : 'neutral'}
-                    onClick={() => setCategory(cat.key)}
-                    sx={{ cursor: 'pointer' }}
-                  >
-                    {cat.label}
-                  </Chip>
-                ))}
+              {localCategories.length > 0 && (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1, mt: 0.5 }}>
+                  {localCategories.map((cat) => (
+                    <Chip
+                      key={cat}
+                      variant={category === cat ? 'solid' : 'outlined'}
+                      color={category === cat ? 'primary' : 'neutral'}
+                      onClick={() => setCategory(cat)}
+                      sx={{ cursor: 'pointer' }}
+                    >
+                      {cat}
+                    </Chip>
+                  ))}
+                </Box>
+              )}
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Input
+                  size="sm"
+                  placeholder={localCategories.length === 0 ? 'Type a category name...' : 'New category...'}
+                  value={newCategoryInput}
+                  onChange={(e) => setNewCategoryInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCategory(); } }}
+                  sx={{ flex: 1 }}
+                />
+                <IconButton size="sm" variant="outlined" onClick={addCategory} disabled={!newCategoryInput.trim()}>
+                  <AddIcon />
+                </IconButton>
               </Box>
             </FormControl>
 
             {/* Options builder */}
             <Box>
               <FormLabel sx={{ mb: 1 }}>Options (e.g. Size, Milk type)</FormLabel>
-
               {options.map((group, gIdx) => (
                 <Box key={gIdx} sx={{ mb: 2, p: 1.5, bgcolor: 'background.level1', borderRadius: 'md' }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
@@ -220,7 +225,6 @@ export default function ItemForm({ isOpen, onClose, onSubmit, initialData }: Ite
                   </Box>
                 </Box>
               ))}
-
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Input
                   size="sm"

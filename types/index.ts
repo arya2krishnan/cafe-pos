@@ -8,7 +8,7 @@ export interface CartItem {
 export interface ItemData {
   id?: string | number;
   name: string;
-  price: number;
+  price?: number;
   description?: string;
   imageUrl?: string;
   options?: ItemOption[];

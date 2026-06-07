@@ -16,7 +16,6 @@ import { CartItem } from '@/types';
 
 interface CartButtonProps {
   items: CartItem[];
-  totalPrice: number;
   onClick: () => void;
   onRemove: (index: number) => void;
   onDestroy: () => void;
@@ -61,9 +60,6 @@ export default function CartButton(props: CartButtonProps) {
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <Box sx={{ flex: 1 }}>
                         <Typography level="title-sm">{cartItem.item.name}</Typography>
-                        <Typography level="body-xs" sx={{ color: 'text.secondary' }}>
-                          ${(cartItem.item.price * cartItem.quantity).toFixed(2)}
-                        </Typography>
                         {Object.entries(cartItem.selectedOptions).length > 0 && (
                           <Box sx={{ mt: 0.5, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                             {Object.entries(cartItem.selectedOptions).flatMap(([name, vals]) =>
@@ -102,10 +98,6 @@ export default function CartButton(props: CartButtonProps) {
           {/* Footer */}
           {count > 0 && (
             <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography level="title-lg">Total</Typography>
-                <Typography level="title-lg">${props.totalPrice.toFixed(2)}</Typography>
-              </Box>
               <Stack spacing={1}>
                 <Button fullWidth size="lg" color="primary" onClick={() => { setOpen(false); props.onClick(); }}>
                   Checkout

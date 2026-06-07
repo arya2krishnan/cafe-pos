@@ -146,7 +146,6 @@ export default function POSPage({ params }: { params: Promise<{ slug: string }> 
           <Box sx={{ position: 'fixed', top: 64, right: 16, zIndex: 1050 }}>
             <CartButton
               items={cartItems}
-              totalPrice={getTotalPrice()}
               onClick={handleCheckout}
               onRemove={removeItem}
               onDestroy={clearCart}

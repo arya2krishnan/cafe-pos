@@ -41,10 +41,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   const ownerId = await getUserIdForSlug(db, slug);
   if (ownerId !== userId) return unauthorized();
 
-  const { name, price, description, options, category } = await req.json();
+  const { name, description, options, category } = await req.json();
 
-  if (!name || price === undefined || price === null) {
-    return NextResponse.json({ error: 'name and price are required' }, { status: 400 });
+  if (!name) {
+    return NextResponse.json({ error: 'name is required' }, { status: 400 });
   }
 
   let parsedOptions = options;
@@ -57,7 +57,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   const itemData: Record<string, any> = {
     id: itemId,
     name,
-    price: parseFloat(String(price)),
     imageUrl: '',
     category: category || 'misc',
     displayOrder: 999,
