@@ -1,6 +1,6 @@
 'use client';
 import { usePathname, useRouter } from 'next/navigation';
-import { Box, Button, Typography } from '@mui/joy';
+import { Box, Button, Typography, IconButton } from '@mui/joy';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import StorefrontIcon from '@mui/icons-material/Storefront';
@@ -55,9 +55,7 @@ export function NavBar({ slug, showAdminLinks = false }: NavBarProps) {
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', ml: { xs: 1, md: 2 }, minWidth: { xs: 'auto', md: '180px' } }}>
-        <TooltipIconButton
-          tooltip={cafe?.name || 'Home'}
-          placement="bottom"
+        <IconButton
           onClick={() => router.push(`/${slug}`)}
           variant="plain"
           color="neutral"
@@ -68,7 +66,7 @@ export function NavBar({ slug, showAdminLinks = false }: NavBarProps) {
           ) : (
             <StorefrontIcon sx={{ fontSize: 24 }} />
           )}
-        </TooltipIconButton>
+        </IconButton>
         <Typography level="title-lg" sx={{ ml: 1, display: { xs: 'none', sm: 'block' } }}>
           {cafe?.name ?? ''}
         </Typography>

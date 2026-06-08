@@ -42,8 +42,8 @@ export default function ItemGrid({ items }: ItemGridProps) {
     setIsModalOpen(true);
   };
 
-  const handleAddToCart = (item: ItemData, selectedOptions: Record<string, string[]>, quantity: number) => {
-    addItem(item, selectedOptions, quantity);
+  const handleAddToCart = (item: ItemData, selectedOptions: Record<string, string[]>, quantity: number, specialRequests?: string) => {
+    addItem(item, selectedOptions, quantity, specialRequests);
     setIsModalOpen(false);
     setSelectedItem(null);
   };
@@ -143,19 +143,21 @@ export default function ItemGrid({ items }: ItemGridProps) {
           item={selectedItem.name}
           description={selectedItem.description || ''}
           imageUrl={selectedItem.imageUrl}
+          allowSpecialRequests={selectedItem.allowSpecialRequests}
           options={
             Array.isArray(selectedItem.options)
               ? selectedItem.options.map((opt: any) => ({
                   option: opt.name,
                   options: opt.values,
                   isMultiple: opt.isMultiple ?? false,
+                  defaultValue: opt.defaultValue,
                   onChange: () => {},
                 }))
               : []
           }
           isOpen={isModalOpen}
           onClose={() => { setIsModalOpen(false); setSelectedItem(null); }}
-          onSubmit={(selectedOptions, quantity) => handleAddToCart(selectedItem, selectedOptions, quantity)}
+          onSubmit={(selectedOptions, quantity, specialRequests) => handleAddToCart(selectedItem, selectedOptions, quantity, specialRequests)}
         />
       )}
     </Box>

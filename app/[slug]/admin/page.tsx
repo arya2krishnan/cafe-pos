@@ -1,7 +1,16 @@
 'use client';
-import { Box, Typography, Grid, Card, CardContent, CardOverflow, Button, Chip, CircularProgress, Alert, Divider } from '@mui/joy';
+import { Box, Typography, Grid, Card, CardContent, CardOverflow, Button, Chip, CircularProgress, Alert, Divider, Input } from '@mui/joy';
 import TooltipIconButton from '@/components/common/TooltipIconButton';
 import { useState, useEffect } from 'react';
+import {
+  DndContext, closestCenter, KeyboardSensor, PointerSensor,
+  useSensor, useSensors, DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext, sortableKeyboardCoordinates, useSortable,
+  verticalListSortingStrategy, rectSortingStrategy, arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { NavBar } from '@/components/NavBar';
 import ItemForm from '@/components/admin/ItemForm';
 import AdminItemCard from '@/components/admin/AdminItemCard';
@@ -17,7 +26,84 @@ import ArchiveIcon from '@mui/icons-material/Archive';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import EditIcon from '@mui/icons-material/Edit';
 import { use } from 'react';
+
+// ─── Inline category name editor ───────────────────────────────────────────
+
+function CategoryNameEditor({
+  cat,
+  onRename,
+}: {
+  cat: CategoryData;
+  onRename: (newName: string) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(cat.name);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { setValue(cat.name); }, [cat.name]);
+
+  const save = async () => {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === cat.name) { setEditing(false); setValue(cat.name); return; }
+    setSaving(true);
+    try { await onRename(trimmed); }
+    catch { setValue(cat.name); }
+    finally { setSaving(false); setEditing(false); }
+  };
+
+  if (editing) {
+    return (
+      <Input
+        value={value}
+        size="sm"
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') { e.preventDefault(); save(); }
+          if (e.key === 'Escape') { setEditing(false); setValue(cat.name); }
+        }}
+        autoFocus
+        endDecorator={saving ? <CircularProgress size="sm" /> : null}
+        sx={{ fontWeight: 'bold', fontSize: 'xl', maxWidth: '280px', textTransform: 'capitalize' }}
+      />
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'text',
+        '&:hover .edit-pencil': { opacity: 1 },
+      }}
+      onClick={() => setEditing(true)}
+    >
+      <Typography level="h3" sx={{ fontWeight: 'bold', textTransform: 'capitalize' }}>
+        {cat.name}
+      </Typography>
+      <EditIcon className="edit-pencil" sx={{ fontSize: 16, color: 'text.tertiary', opacity: 0, transition: 'opacity 0.15s' }} />
+    </Box>
+  );
+}
+
+// ─── Sortable item card wrapper ─────────────────────────────────────────────
+
+function SortableItemCard({ item, ...props }: { item: ItemData } & React.ComponentProps<typeof AdminItemCard>) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: String(item.id) });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+
+  return (
+    <Grid xs={12} sm={6} md={4} lg={3}>
+      <Box ref={setNodeRef} style={style} sx={{ height: '100%' }}>
+        <AdminItemCard item={item} dragListeners={listeners} dragAttributes={attributes} {...props} />
+      </Box>
+    </Grid>
+  );
+}
+
+// ─── Main admin page ────────────────────────────────────────────────────────
 
 export default function AdminPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -30,7 +116,15 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
     isLoading, error, fetchAll,
     handleCreateOrEdit, handleToggleSoldOut, handleArchiveItem, handleArchiveCategory,
     handleDeleteItem, handleDeleteCategory, handleAddCategory,
+    handleSaveItemInline, handleRenameCategory, handleReorderCategories, handleReorderItems,
   } = useAdminData(slug, getIdToken);
+
+  // Local state for optimistic D&D reordering
+  const [localCategories, setLocalCategories] = useState<CategoryData[]>([]);
+  const [localByCategory, setLocalByCategory] = useState<Record<string, ItemData[]>>({});
+
+  useEffect(() => { setLocalCategories(activeCategories); }, [activeCategories]);
+  useEffect(() => { setLocalByCategory(byCategory); }, [byCategory]);
 
   // Form state
   const [formOpen, setFormOpen] = useState(false);
@@ -45,6 +139,11 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
   const [deleteCatLoading, setDeleteCatLoading] = useState(false);
   const [addCatOpen, setAddCatOpen] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   useEffect(() => { if (!loading && !user) router.replace(`/login?next=/${slug}/admin`); }, [user, loading]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (user) fetchAll(); }, [fetchAll, user]);
@@ -70,6 +169,29 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
     finally { setDeleteCatLoading(false); }
   };
 
+  const handleCategoryDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = localCategories.findIndex((c) => c.name === active.id);
+    const newIdx = localCategories.findIndex((c) => c.name === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove(localCategories, oldIdx, newIdx);
+    setLocalCategories(reordered);
+    handleReorderCategories(reordered.map((c) => c.name));
+  };
+
+  const handleItemDragEnd = (catName: string, event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const catItems = localByCategory[catName] ?? [];
+    const oldIdx = catItems.findIndex((i) => String(i.id) === active.id);
+    const newIdx = catItems.findIndex((i) => String(i.id) === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove(catItems, oldIdx, newIdx);
+    setLocalByCategory((prev) => ({ ...prev, [catName]: reordered }));
+    handleReorderItems(reordered);
+  };
+
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', pt: 10 }}><CircularProgress /></Box>;
 
   return (
@@ -87,7 +209,7 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
 
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', pt: 4 }}><CircularProgress /></Box>
-        ) : activeCategories.length === 0 && items_isEmpty(individuallyArchivedItems, byCategory, activeCategories) ? (
+        ) : localCategories.length === 0 && items_isEmpty(individuallyArchivedItems, byCategory, activeCategories) ? (
           <Box
             sx={{ textAlign: 'center', py: 8, border: '2px dashed', borderColor: 'divider', borderRadius: 'lg', cursor: 'pointer' }}
             onClick={() => setAddCatOpen(true)}
@@ -98,59 +220,31 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
           </Box>
         ) : (
           <>
-            {activeCategories.map((cat) => {
-              const catItems = (byCategory[cat.name] ?? []).filter((i) => !i.archived);
-              return (
-                <Box key={cat.name} sx={{ mb: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography level="h3" sx={{ fontWeight: 'bold', textTransform: 'capitalize' }}>
-                      {cat.name}
-                      <Typography component="span" level="body-sm" sx={{ ml: 1, color: 'text.tertiary' }}>
-                        {catItems.length} item{catItems.length !== 1 ? 's' : ''}
-                      </Typography>
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button size="sm" variant="soft" startDecorator={<AddIcon />} onClick={() => openForm(undefined, cat.name)}>
-                        Add Item
-                      </Button>
-                      <TooltipIconButton tooltip={`Archive ${cat.name}`} size="sm" variant="soft" color="neutral" onClick={() => handleArchiveCategory(cat, true)}>
-                        <ArchiveIcon fontSize="small" />
-                      </TooltipIconButton>
-                      <TooltipIconButton tooltip={`Delete ${cat.name}`} size="sm" variant="soft" color="danger" onClick={() => setDeletingCategory(cat)}>
-                        <DeleteIcon fontSize="small" />
-                      </TooltipIconButton>
-                    </Box>
-                  </Box>
-
-                  {catItems.length === 0 ? (
-                    <Box
-                      sx={{
-                        py: 4, border: '1px dashed', borderColor: 'divider', borderRadius: 'md',
-                        textAlign: 'center', cursor: 'pointer', color: 'text.tertiary',
-                        '&:hover': { borderColor: 'primary.400', color: 'primary.400' },
-                      }}
-                      onClick={() => openForm(undefined, cat.name)}
-                    >
-                      <Typography level="body-sm">No items yet — click to add one</Typography>
-                    </Box>
-                  ) : (
-                    <Grid container spacing={2}>
-                      {catItems.map((item) => (
-                        <Grid key={String(item.id)} xs={12} sm={6} md={4} lg={3}>
-                          <AdminItemCard
-                            item={item}
-                            onEdit={() => openForm(item)}
-                            onDelete={() => setDeletingItem(item)}
-                            onToggleSoldOut={() => handleToggleSoldOut(item)}
-                            onArchive={() => handleArchiveItem(item, true)}
-                          />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  )}
-                </Box>
-              );
-            })}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
+              <SortableContext items={localCategories.map((c) => c.name)} strategy={verticalListSortingStrategy}>
+                {localCategories.map((cat) => {
+                  const catItems = (localByCategory[cat.name] ?? []).filter((i) => !i.archived);
+                  return (
+                    <SortableCategoryBlock
+                      key={cat.name}
+                      cat={cat}
+                      catItems={catItems}
+                      sensors={sensors}
+                      onItemDragEnd={(e) => handleItemDragEnd(cat.name, e)}
+                      onRename={(newName) => handleRenameCategory(cat, newName)}
+                      onAddItem={() => openForm(undefined, cat.name)}
+                      onArchiveCategory={() => handleArchiveCategory(cat, true)}
+                      onDeleteCategory={() => setDeletingCategory(cat)}
+                      onEditItem={(item) => openForm(item)}
+                      onDeleteItem={(item) => setDeletingItem(item)}
+                      onToggleSoldOut={(item) => handleToggleSoldOut(item)}
+                      onArchiveItem={(item) => handleArchiveItem(item, true)}
+                      onSaveItemInline={(item, updates) => handleSaveItemInline(item, updates)}
+                    />
+                  );
+                })}
+              </SortableContext>
+            </DndContext>
 
             {uncategorized.length > 0 && (
               <Box sx={{ mb: 4 }}>
@@ -306,6 +400,95 @@ export default function AdminPage({ params }: { params: Promise<{ slug: string }
         })()}
       />
     </>
+  );
+}
+
+// ─── Sortable category block ────────────────────────────────────────────────
+
+interface SortableCategoryBlockProps {
+  cat: CategoryData;
+  catItems: ItemData[];
+  sensors: ReturnType<typeof useSensors>;
+  onItemDragEnd: (event: DragEndEvent) => void;
+  onRename: (newName: string) => Promise<void>;
+  onAddItem: () => void;
+  onArchiveCategory: () => void;
+  onDeleteCategory: () => void;
+  onEditItem: (item: ItemData) => void;
+  onDeleteItem: (item: ItemData) => void;
+  onToggleSoldOut: (item: ItemData) => void;
+  onArchiveItem: (item: ItemData) => void;
+  onSaveItemInline: (item: ItemData, updates: { name?: string; description?: string }) => void;
+}
+
+function SortableCategoryBlock({
+  cat, catItems, sensors, onItemDragEnd, onRename,
+  onAddItem, onArchiveCategory, onDeleteCategory,
+  onEditItem, onDeleteItem, onToggleSoldOut, onArchiveItem, onSaveItemInline,
+}: SortableCategoryBlockProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.name });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  return (
+    <Box ref={setNodeRef} style={style} sx={{ mb: 2, pb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            {...attributes}
+            {...listeners}
+            sx={{ cursor: 'grab', color: 'text.tertiary', display: 'flex', alignItems: 'center', touchAction: 'none', '&:hover': { color: 'text.primary' } }}
+          >
+            <DragIndicatorIcon />
+          </Box>
+          <CategoryNameEditor cat={cat} onRename={onRename} />
+          <Typography component="span" level="body-sm" sx={{ color: 'text.tertiary' }}>
+            {catItems.length} item{catItems.length !== 1 ? 's' : ''}
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button size="sm" variant="soft" startDecorator={<AddIcon />} onClick={onAddItem}>
+            Add Item
+          </Button>
+          <TooltipIconButton tooltip={`Archive ${cat.name}`} size="sm" variant="soft" color="neutral" onClick={onArchiveCategory}>
+            <ArchiveIcon fontSize="small" />
+          </TooltipIconButton>
+          <TooltipIconButton tooltip={`Delete ${cat.name}`} size="sm" variant="soft" color="danger" onClick={onDeleteCategory}>
+            <DeleteIcon fontSize="small" />
+          </TooltipIconButton>
+        </Box>
+      </Box>
+
+      {catItems.length === 0 ? (
+        <Box
+          sx={{
+            py: 4, border: '1px dashed', borderColor: 'divider', borderRadius: 'md',
+            textAlign: 'center', cursor: 'pointer', color: 'text.tertiary',
+            '&:hover': { borderColor: 'primary.400', color: 'primary.400' },
+          }}
+          onClick={onAddItem}
+        >
+          <Typography level="body-sm">No items yet — click to add one</Typography>
+        </Box>
+      ) : (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onItemDragEnd}>
+          <SortableContext items={catItems.map((i) => String(i.id))} strategy={rectSortingStrategy}>
+            <Grid container spacing={2}>
+              {catItems.map((item) => (
+                <SortableItemCard
+                  key={String(item.id)}
+                  item={item}
+                  onEdit={() => onEditItem(item)}
+                  onDelete={() => onDeleteItem(item)}
+                  onToggleSoldOut={() => onToggleSoldOut(item)}
+                  onArchive={() => onArchiveItem(item)}
+                  onSaveInline={(updates) => onSaveItemInline(item, updates)}
+                />
+              ))}
+            </Grid>
+          </SortableContext>
+        </DndContext>
+      )}
+    </Box>
   );
 }
 

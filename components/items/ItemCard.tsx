@@ -86,7 +86,8 @@ export default function ItemCard(props: ItemCardProps) {
       </Box>
       <CardOverflow>
         <Button
-          variant="soft"
+          variant="solid"
+          color="primary"
           size="lg"
           onClick={(e) => { e.stopPropagation(); props.onClick(); }}
           disabled={props.soldOut}

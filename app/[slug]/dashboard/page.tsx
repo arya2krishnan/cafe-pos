@@ -8,6 +8,9 @@ import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { use } from 'react';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+} from 'recharts';
 
 interface ItemStats { name: string; quantity: number; category: string; }
 interface StorePerformance {
@@ -134,6 +137,41 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
                     </Card>
                   </Grid>
                 </Grid>
+
+                {storePerformance[activeTab].itemStats.length > 0 && (
+                  <Card variant="outlined" sx={{ mb: 3, p: 2 }}>
+                    <Typography level="title-sm" sx={{ mb: 2, color: 'text.secondary' }}>Items Sold</Typography>
+                    <ResponsiveContainer width="100%" height={260}>
+                      <BarChart
+                        data={storePerformance[activeTab].itemStats.slice(0, 10)}
+                        margin={{ top: 4, right: 16, left: -8, bottom: 60 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fill: 'rgba(255,255,255,0.55)', fontSize: 12 }}
+                          angle={-35}
+                          textAnchor="end"
+                          interval={0}
+                        />
+                        <YAxis
+                          allowDecimals={false}
+                          tick={{ fill: 'rgba(255,255,255,0.55)', fontSize: 12 }}
+                        />
+                        <Tooltip
+                          contentStyle={{ background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff' }}
+                          cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                          formatter={(v) => [v, 'sold']}
+                        />
+                        <Bar dataKey="quantity" radius={[4, 4, 0, 0]}>
+                          {storePerformance[activeTab].itemStats.slice(0, 10).map((_, i) => (
+                            <Cell key={i} fill={`var(--joy-palette-primary-${i === 0 ? '500' : i < 3 ? '400' : '300'})`} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Card>
+                )}
 
                 <Sheet variant="outlined" sx={{ borderRadius: 'md', overflow: 'hidden' }}>
                   <Table hoverRow>

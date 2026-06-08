@@ -2,19 +2,13 @@
 import { useState } from 'react';
 import {
   Button, FormControl, FormLabel, Input, Textarea,
-  Stack, Modal, ModalDialog, DialogTitle, Divider, Box,
+  Stack, Modal, ModalDialog, DialogTitle, Divider, Box, Switch, Typography,
 } from '@mui/joy';
 import { ItemData, CategoryData } from '@/types';
 import { useLogoUpload } from '@/hooks/useLogoUpload';
 import ImageUploader from './ImageUploader';
-import OptionGroupBuilder from './OptionGroupBuilder';
+import OptionGroupBuilder, { OptionGroup } from './OptionGroupBuilder';
 import CategorySelector from './CategorySelector';
-
-interface OptionGroup {
-  name: string;
-  values: string[];
-  isMultiple: boolean;
-}
 
 interface ItemFormProps {
   isOpen: boolean;
@@ -46,8 +40,9 @@ export default function ItemForm({
   const [description, setDescription] = useState(initialData?.description ?? '');
   const [category, setCategory] = useState(defaultCategory);
   const [options, setOptions] = useState<OptionGroup[]>(
-    (initialData?.options as any[])?.map((o) => ({ name: o.name, values: o.values, isMultiple: o.isMultiple })) ?? [],
+    (initialData?.options as any[])?.map((o) => ({ name: o.name, values: o.values, isMultiple: o.isMultiple, defaultValue: o.defaultValue })) ?? [],
   );
+  const [allowSpecialRequests, setAllowSpecialRequests] = useState(initialData?.allowSpecialRequests ?? false);
   const [isLoading, setIsLoading] = useState(false);
 
   const image = useLogoUpload();
@@ -58,7 +53,7 @@ export default function ItemForm({
     setIsLoading(true);
     try {
       await onSubmit(
-        { name: name.trim(), description: description.trim(), category: category || 'misc', options: options as any },
+        { name: name.trim(), description: description.trim(), category: category || 'misc', options: options as any, allowSpecialRequests },
         image.file ?? undefined,
       );
       onClose();
@@ -99,7 +94,17 @@ export default function ItemForm({
               getIdToken={getIdToken}
             />
 
-            <OptionGroupBuilder options={options} onOptionsChange={setOptions} />
+            <OptionGroupBuilder
+              options={options}
+              onOptionsChange={setOptions}
+              slug={slug}
+              getIdToken={getIdToken}
+            />
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Switch checked={allowSpecialRequests} onChange={(e) => setAllowSpecialRequests(e.target.checked)} size="sm" />
+              <Typography level="body-sm">Allow special requests</Typography>
+            </Box>
 
             <Divider />
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>

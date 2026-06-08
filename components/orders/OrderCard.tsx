@@ -53,6 +53,11 @@ export default function OrderCard({ order, onComplete, onDelete }: OrderCardProp
                   </Typography>
                   <Box sx={{ mt: 0.5 }}>
                     <OptionChips selectedOptions={item.selectedOptions} color="primary" />
+                    {item.specialRequests && (
+                      <Typography level="body-xs" sx={{ mt: 0.5, color: 'text.secondary', fontStyle: 'italic' }}>
+                        Note: {item.specialRequests}
+                      </Typography>
+                    )}
                   </Box>
                 </ListItemContent>
               </ListItem>

@@ -14,7 +14,7 @@ export async function PUT(
   const { userId, db } = auth;
 
   const body = await req.json();
-  const allowed = ['soldOut', 'archived', 'category', 'displayOrder', 'name', 'description', 'imageUrl', 'options'];
+  const allowed = ['soldOut', 'archived', 'category', 'displayOrder', 'name', 'description', 'imageUrl', 'options', 'allowSpecialRequests'];
   const updates = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k)));
 
   const itemRef = cafeRef(db, userId).collection('items').doc(id);

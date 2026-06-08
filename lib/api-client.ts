@@ -106,6 +106,43 @@ export function createApiService(slug: string, getIdToken: () => Promise<string 
       }, token);
     },
 
+    renameCategory: async (oldName: string, newName: string) => {
+      const token = await getIdToken();
+      return apiFetch<{ ok: boolean; oldName: string; newName: string }>(
+        `${base}/categories/${encodeURIComponent(oldName)}`,
+        { method: 'PUT', body: JSON.stringify({ newName }) },
+        token,
+      );
+    },
+
+    updateCategoryOrder: async (name: string, displayOrder: number) => {
+      const token = await getIdToken();
+      return apiFetch<{ ok: boolean }>(`${base}/categories/${encodeURIComponent(name)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ displayOrder }),
+      }, token);
+    },
+
+    getOptionTemplates: async () => {
+      const token = await getIdToken();
+      return apiFetch<any[]>(`${base}/option-templates`, {}, token);
+    },
+
+    createOptionTemplate: async (template: { name: string; values: string[]; isMultiple: boolean }) => {
+      const token = await getIdToken();
+      return apiFetch<{ id: string }>(`${base}/option-templates`, {
+        method: 'POST',
+        body: JSON.stringify(template),
+      }, token);
+    },
+
+    deleteOptionTemplate: async (id: string) => {
+      const token = await getIdToken();
+      return apiFetch<{ ok: boolean }>(`${base}/option-templates/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      }, token);
+    },
+
     updateItem: async (itemId: string, updates: Partial<ItemData>) => {
       const token = await getIdToken();
       return apiFetch<{ ok: boolean }>(`${base}/items/${itemId}`, {

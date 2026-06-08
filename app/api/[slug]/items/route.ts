@@ -49,7 +49,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   if (auth instanceof Response) return auth;
   const { userId, db } = auth;
 
-  const { name, description, options, category } = await req.json();
+  const { name, description, options, category, allowSpecialRequests } = await req.json();
 
   if (!name) {
     return NextResponse.json({ error: 'name is required' }, { status: 400 });
@@ -73,6 +73,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   };
   if (description !== undefined) itemData.description = description || '';
   if (parsedOptions !== undefined) itemData.options = parsedOptions || [];
+  if (allowSpecialRequests !== undefined) itemData.allowSpecialRequests = !!allowSpecialRequests;
 
   await itemRef.set(itemData);
 

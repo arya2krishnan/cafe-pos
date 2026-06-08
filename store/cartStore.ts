@@ -4,7 +4,7 @@ import { CartItem, ItemData } from '@/types';
 
 interface CartStore {
   items: CartItem[];
-  addItem: (item: ItemData, selectedOptions: Record<string, string[]>, quantity: number) => void;
+  addItem: (item: ItemData, selectedOptions: Record<string, string[]>, quantity: number, specialRequests?: string) => void;
   removeItem: (index: number) => void;
   clearCart: () => void;
   updateQuantity: (index: number, quantity: number) => void;
@@ -13,9 +13,9 @@ interface CartStore {
 export const useCartStore = create<CartStore>((set) => ({
   items: [],
 
-  addItem: (item, selectedOptions, quantity) => {
+  addItem: (item, selectedOptions, quantity, specialRequests) => {
     set((state) => ({
-      items: [...state.items, { id: `${item.id}-${Date.now()}`, item, selectedOptions, quantity }],
+      items: [...state.items, { id: `${item.id}-${Date.now()}`, item, selectedOptions, quantity, specialRequests }],
     }));
   },
 

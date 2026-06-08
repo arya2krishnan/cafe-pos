@@ -4,6 +4,7 @@ import Button from '@mui/joy/Button';
 import Modal from '@mui/joy/Modal';
 import ModalDialog from '@mui/joy/ModalDialog';
 import Typography from '@mui/joy/Typography';
+import Textarea from '@mui/joy/Textarea';
 import ItemOptions, { ItemOptionsProps } from './ItemOptions';
 import { Box } from '@mui/joy';
 import QuantityControl from '@/components/common/QuantityControl';
@@ -11,27 +12,38 @@ import QuantityControl from '@/components/common/QuantityControl';
 interface ItemOptionsModalProps {
   item: string;
   description: string;
-  options: ItemOptionsProps[];
+  options: (ItemOptionsProps & { defaultValue?: string })[];
   isOpen: boolean;
   onClose: () => void;
-  onSubmit?: (selectedValues: Record<string, string[]>, quantity: number) => void;
+  onSubmit?: (selectedValues: Record<string, string[]>, quantity: number, specialRequests?: string) => void;
   imageUrl?: string;
+  allowSpecialRequests?: boolean;
 }
 
 export default function ItemOptionsModal(props: ItemOptionsModalProps) {
   const [selectedValues, setSelectedValues] = React.useState<Record<string, string[]>>({});
   const [total, setTotal] = React.useState(1);
   const [quantityError, setQuantityError] = React.useState('');
+  const [specialRequests, setSpecialRequests] = React.useState('');
 
   React.useEffect(() => {
-    if (props.isOpen && props.options.length > 0) {
+    if (props.isOpen) {
       const initial: Record<string, string[]> = {};
       props.options.forEach((opt) => {
         if (opt.options.length > 0) {
-          initial[opt.option] = opt.isMultiple ? [] : [opt.options[0]];
+          if (opt.isMultiple) {
+            initial[opt.option] = [];
+          } else {
+            // Use admin-specified default, fall back to first option
+            const def = opt.defaultValue && opt.options.includes(opt.defaultValue)
+              ? opt.defaultValue
+              : opt.options[0];
+            initial[opt.option] = [def];
+          }
         }
       });
       setSelectedValues(initial);
+      setSpecialRequests('');
     }
   }, [props.isOpen, props.options]);
 
@@ -42,11 +54,11 @@ export default function ItemOptionsModal(props: ItemOptionsModalProps) {
   const onSubmit = () => {
     if (total <= 0) { setQuantityError('Please select at least 1 item.'); return; }
     setQuantityError('');
-    props.onSubmit?.(selectedValues, total);
+    props.onSubmit?.(selectedValues, total, specialRequests.trim() || undefined);
   };
 
   return (
-    <Modal open={props.isOpen} onClose={() => { props.onClose(); setSelectedValues({}); setTotal(1); }}>
+    <Modal open={props.isOpen} onClose={() => { props.onClose(); setSelectedValues({}); setTotal(1); setSpecialRequests(''); }}>
       <ModalDialog
         sx={(theme) => ({
           width: { xs: '95vw', sm: '600px', md: '700px' },
@@ -86,6 +98,18 @@ export default function ItemOptionsModal(props: ItemOptionsModalProps) {
               />
             </Box>
           ))}
+
+          {props.allowSpecialRequests && (
+            <Box sx={{ mt: 1 }}>
+              <Textarea
+                placeholder="Any special requests?"
+                minRows={2}
+                value={specialRequests}
+                onChange={(e) => setSpecialRequests(e.target.value)}
+                sx={{ width: '100%' }}
+              />
+            </Box>
+          )}
         </Box>
 
         <Box sx={{ mt: 2 }}>

@@ -67,6 +67,30 @@ export function useAdminData(slug: string, getIdToken: () => Promise<string | nu
     await fetchAll();
   }, [fetchAll]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const handleRenameCategory = useCallback(async (cat: CategoryData, newName: string) => {
+    const res = await api.renameCategory(cat.name, newName);
+    if (!res.success) throw new Error(res.error || 'Failed to rename category');
+    await fetchAll();
+  }, [fetchAll]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleReorderCategories = useCallback(async (orderedNames: string[]) => {
+    await Promise.all(
+      orderedNames.map((name, idx) => api.updateCategoryOrder(name, idx)),
+    );
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSaveItemInline = useCallback(async (item: ItemData, updates: { name?: string; description?: string }) => {
+    if (!item.id) return;
+    setItems((prev) => prev.map((i) => String(i.id) === String(item.id) ? { ...i, ...updates } : i));
+    await api.updateItem(String(item.id), updates);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleReorderItems = useCallback(async (orderedItems: ItemData[]) => {
+    await Promise.all(
+      orderedItems.map((item, idx) => item.id ? api.updateItem(String(item.id), { displayOrder: idx }) : Promise.resolve()),
+    );
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const derived = useMemo(() => {
     const activeCategories = categories.filter((c) => !c.archived);
     const archivedCategories = categories.filter((c) => c.archived);
@@ -107,5 +131,9 @@ export function useAdminData(slug: string, getIdToken: () => Promise<string | nu
     handleDeleteItem,
     handleDeleteCategory,
     handleAddCategory,
+    handleSaveItemInline,
+    handleRenameCategory,
+    handleReorderCategories,
+    handleReorderItems,
   };
 }

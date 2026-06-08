@@ -41,7 +41,7 @@ export default function ItemOptions(props: ItemOptionsProps) {
       >
         {props.options.map((item) => (
           <ListItem key={item}>
-            {value.includes(item) && <Done color="primary" sx={{ ml: -0.5, zIndex: 2, pointerEvents: 'none' }} />}
+            {value.includes(item) && <Done sx={{ ml: -0.5, zIndex: 2, pointerEvents: 'none', color: 'var(--joy-palette-primary-500)' }} />}
             <Checkbox
               size="sm"
               disableIcon

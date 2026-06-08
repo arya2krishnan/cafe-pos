@@ -62,6 +62,11 @@ export default function CartButton(props: CartButtonProps) {
                       <Box sx={{ flex: 1 }}>
                         <Typography level="title-sm">{cartItem.item.name}</Typography>
                         <OptionChips selectedOptions={cartItem.selectedOptions} />
+                        {cartItem.specialRequests && (
+                          <Typography level="body-xs" sx={{ mt: 0.25, color: 'text.secondary', fontStyle: 'italic' }}>
+                            Note: {cartItem.specialRequests}
+                          </Typography>
+                        )}
                       </Box>
                       <TooltipIconButton tooltip="Remove" size="sm" variant="plain" color="danger" onClick={() => props.onRemove(index)}>
                         <DeleteIcon />

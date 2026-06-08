@@ -3,6 +3,7 @@ export interface CartItem {
   item: ItemData;
   selectedOptions: Record<string, string[]>;
   quantity: number;
+  specialRequests?: string;
 }
 
 export interface ItemData {
@@ -16,12 +17,22 @@ export interface ItemData {
   soldOut?: boolean;
   displayOrder?: number;
   archived?: boolean;
+  allowSpecialRequests?: boolean;
 }
 
 export interface ItemOption {
   name: string;
   values: string[];
   isMultiple: boolean;
+  defaultValue?: string;
+}
+
+export interface OptionTemplate {
+  id: string;
+  name: string;
+  values: string[];
+  isMultiple: boolean;
+  createdAt: string;
 }
 
 export interface OrderData {
