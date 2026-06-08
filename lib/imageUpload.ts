@@ -1,6 +1,20 @@
 import { getStorage } from './firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 
+export async function deleteStorageFile(url: string): Promise<void> {
+  const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+  if (!storageBucket || !url) return;
+  const prefix = `https://storage.googleapis.com/${storageBucket}/`;
+  if (!url.startsWith(prefix)) return;
+  const objectPath = decodeURIComponent(url.slice(prefix.length));
+  const bucket = getStorage().bucket(storageBucket);
+  try {
+    await bucket.file(objectPath).delete();
+  } catch {
+    // already deleted or never existed — ignore
+  }
+}
+
 export async function uploadBase64ToStorage(
   base64Data: string,
   filename: string,

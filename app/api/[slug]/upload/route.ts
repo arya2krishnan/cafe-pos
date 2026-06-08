@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cafeRef } from '@/lib/firebase-admin';
 import { verifySlugOwnership } from '@/lib/withAuth';
-import { uploadBase64ToStorage } from '@/lib/imageUpload';
+import { uploadBase64ToStorage, deleteStorageFile } from '@/lib/imageUpload';
 
 
 // POST /api/[slug]/upload — base64 image upload for an item
@@ -21,7 +21,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   if (!itemDoc.exists) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
 
   try {
+    const oldImageUrl: string = itemDoc.data()?.imageUrl ?? '';
     const imageUrl = await uploadBase64ToStorage(base64Data, filename, mimeType, 'product-images');
+    if (oldImageUrl) await deleteStorageFile(oldImageUrl).catch(() => {});
     await cafeRef(db, userId).collection('items').doc(itemId).update({ imageUrl });
     return NextResponse.json({ imageUrl });
   } catch {

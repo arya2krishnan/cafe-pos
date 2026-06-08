@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cafeRef } from '@/lib/firebase-admin';
 import { verifySlugOwnership } from '@/lib/withAuth';
+import { deleteStorageFile } from '@/lib/imageUpload';
 
 
 // PUT /api/[slug]/items/[id] — update item fields (soldOut, category, displayOrder)
@@ -39,6 +40,8 @@ export async function DELETE(
   const itemDoc = await itemRef.get();
   if (!itemDoc.exists) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
 
+  const imageUrl: string = itemDoc.data()?.imageUrl ?? '';
   await itemRef.delete();
+  if (imageUrl) await deleteStorageFile(imageUrl).catch(() => {});
   return NextResponse.json({ message: 'Item deleted', itemId: id });
 }

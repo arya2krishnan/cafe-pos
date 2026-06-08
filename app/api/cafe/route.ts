@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, cafeRef } from '@/lib/firebase-admin';
 import { verifyIdToken, unauthorized } from '@/lib/withAuth';
+import { deleteStorageFile } from '@/lib/imageUpload';
 
 function toSlug(name: string): string {
   return name
@@ -73,8 +74,16 @@ export async function PATCH(req: NextRequest) {
   const filtered = Object.fromEntries(Object.entries(updates).filter(([k]) => allowed.includes(k)));
 
   const db = getDb();
-  await cafeRef(db, userId).collection('config').doc('main').update(filtered);
+  const configRef = cafeRef(db, userId).collection('config').doc('main');
 
-  // If name changed, update slug index too (but slug itself doesn't change)
+  if (filtered.logoUrl !== undefined) {
+    const currentDoc = await configRef.get();
+    const oldLogoUrl: string = currentDoc.data()?.logoUrl ?? '';
+    if (oldLogoUrl && oldLogoUrl !== filtered.logoUrl) {
+      await deleteStorageFile(oldLogoUrl).catch(() => {});
+    }
+  }
+
+  await configRef.update(filtered);
   return NextResponse.json({ ok: true });
 }
