@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Button, Drawer, Box, Typography, Stack } from '@mui/joy';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import TooltipIconButton from '@/components/common/TooltipIconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import { QRCodeSVG } from 'qrcode.react';
@@ -10,10 +11,17 @@ const SNOOPY_URL = 'https://firebasestorage.googleapis.com/v0/b/cafe-pos-gough.f
 export default function DonationButton() {
   const [open, setOpen] = useState(false);
   const { cafe } = useCafe();
+  // On mobile the customer is already on their phone, so a QR is useless —
+  // link straight to Venmo instead of opening the QR drawer.
+  const isMobile = useMediaQuery('(max-width:600px)', { noSsr: true });
 
-  if (!cafe?.venmoUsername) return null;
+  if (!cafe?.venmoUsername || cafe.tipButtonEnabled === false) return null;
 
   const venmoUrl = `https://venmo.com/${cafe.venmoUsername}`;
+
+  const linkProps = isMobile
+    ? ({ component: 'a', href: venmoUrl, target: '_blank', rel: 'noopener' } as const)
+    : ({ onClick: () => setOpen(true) } as const);
 
   return (
     <>
@@ -21,20 +29,20 @@ export default function DonationButton() {
         variant="solid"
         color="success"
         size="lg"
-        onClick={() => setOpen(true)}
+        {...linkProps}
         sx={{
           position: 'fixed',
-          bottom: 20,
-          right: 20,
+          bottom: { xs: 12, sm: 20 },
+          right: { xs: 12, sm: 20 },
           borderRadius: 'xl',
           zIndex: 1100,
           transition: 'all 0.2s ease-in-out',
-          minWidth: 180,
-          height: 64,
-          px: 2.5,
+          minWidth: { xs: 'auto', sm: 180 },
+          height: { xs: 52, sm: 64 },
+          px: { xs: 1.75, sm: 2.5 },
           display: 'flex',
           alignItems: 'center',
-          gap: 1.5,
+          gap: { xs: 1, sm: 1.5 },
           fontWeight: 'bold',
           '&:hover': {
             transform: 'scale(1.05)',
@@ -42,10 +50,10 @@ export default function DonationButton() {
           },
         }}
       >
-        <Box sx={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '2px solid rgba(255,255,255,0.3)' }}>
+        <Box sx={{ width: { xs: 28, sm: 36 }, height: { xs: 28, sm: 36 }, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '2px solid rgba(255,255,255,0.3)' }}>
           <img src={SNOOPY_URL} alt="Snoopy with money" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </Box>
-        <Typography sx={{ fontWeight: 'bold', color: 'white', fontSize: '1rem', lineHeight: 1.2 }}>
+        <Typography sx={{ fontWeight: 'bold', color: 'white', fontSize: { xs: '0.875rem', sm: '1rem' }, lineHeight: 1.2 }}>
           Leave a tip :)
         </Typography>
       </Button>

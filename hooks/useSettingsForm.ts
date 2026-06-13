@@ -17,6 +17,7 @@ export function useSettingsForm(
   const [twilioToken, setTwilioToken] = useState('');
   const [twilioPhone, setTwilioPhone] = useState('');
   const [tipsEnabled, setTipsEnabled] = useState(true);
+  const [tipButtonEnabled, setTipButtonEnabled] = useState(true);
   const [hasTwilioCreds, setHasTwilioCreds] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -29,6 +30,7 @@ export function useSettingsForm(
       setCustomSmsMessage(cafe.customSmsMessage ?? '');
       setAccentColor(cafe.accentColor ?? '');
       setTipsEnabled(cafe.tipsEnabled ?? true);
+      setTipButtonEnabled(cafe.tipButtonEnabled ?? true);
       setHasTwilioCreds(cafe.hasTwilioCreds ?? false);
     }
   }, [cafe]);
@@ -94,6 +96,7 @@ export function useSettingsForm(
           customSmsMessage: customSmsMessage.trim(),
           accentColor: accentColor.trim(),
           tipsEnabled,
+          tipButtonEnabled,
           ...twilioUpdate,
         }),
       });
@@ -110,6 +113,7 @@ export function useSettingsForm(
         customSmsMessage: customSmsMessage.trim(),
         accentColor: accentColor.trim(),
         tipsEnabled,
+        tipButtonEnabled,
       });
       setSuccess(true);
       if (twilioUpdate.twilioAccountSid) {
@@ -134,6 +138,7 @@ export function useSettingsForm(
     customSmsMessage, setCustomSmsMessage,
     accentColor, setAccentColor,
     tipsEnabled, setTipsEnabled,
+    tipButtonEnabled, setTipButtonEnabled,
     twilioSid, setTwilioSid,
     twilioToken, setTwilioToken,
     twilioPhone, setTwilioPhone,

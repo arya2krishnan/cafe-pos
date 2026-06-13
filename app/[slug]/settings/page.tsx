@@ -103,6 +103,24 @@ export default function SettingsPage({ params }: { params: Promise<{ slug: strin
 
             <Card variant="outlined">
               <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography level="title-lg">Floating tip button</Typography>
+                    <Typography level="body-sm" sx={{ color: 'text.secondary', mt: 0.25 }}>
+                      Show a green Leave a tip button in the corner of your menu.
+                    </Typography>
+                  </Box>
+                  <Switch
+                    checked={form.tipButtonEnabled}
+                    onChange={(e) => form.setTipButtonEnabled(e.target.checked)}
+                    color={form.tipButtonEnabled ? 'success' : 'neutral'}
+                  />
+                </Box>
+              </CardContent>
+            </Card>
+
+            <Card variant="outlined">
+              <CardContent>
                 <Typography level="title-lg" sx={{ mb: 0.5 }}>Accent color</Typography>
                 <Typography level="body-sm" sx={{ color: 'text.secondary', mb: 2 }}>
                   Sets the color for buttons, chips, and highlights across your cafe.

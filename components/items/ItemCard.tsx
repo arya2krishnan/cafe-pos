@@ -43,19 +43,37 @@ export default function ItemCard(props: ItemCardProps) {
       >
         <Box sx={{ position: 'relative', margin: 0, padding: 0, overflow: 'hidden' }}>
           <AspectRatio ratio="1/1" sx={{ minWidth: '100%', margin: 0, padding: 0 }}>
-            <img
-              src={props.url}
-              loading="lazy"
-              alt={props.title}
-              style={{
-                objectFit: 'cover',
-                objectPosition: 'center center',
-                width: '100%',
-                height: '100%',
-                filter: props.soldOut ? 'grayscale(100%)' : 'none',
-                display: 'block',
-              }}
-            />
+            {props.url ? (
+              <img
+                src={props.url}
+                loading="lazy"
+                alt={props.title}
+                style={{
+                  objectFit: 'cover',
+                  objectPosition: 'center center',
+                  width: '100%',
+                  height: '100%',
+                  filter: props.soldOut ? 'grayscale(100%)' : 'none',
+                  display: 'block',
+                }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  height: '100%',
+                  bgcolor: 'background.level2',
+                  filter: props.soldOut ? 'grayscale(100%)' : 'none',
+                }}
+              >
+                <Typography level="h2" sx={{ color: 'text.tertiary' }}>
+                  {props.title.charAt(0).toUpperCase()}
+                </Typography>
+              </Box>
+            )}
           </AspectRatio>
           {props.soldOut && (
             <Chip

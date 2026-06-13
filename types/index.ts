@@ -72,6 +72,7 @@ export interface CafeConfig {
   customSmsMessage?: string;
   accentColor?: string;
   tipsEnabled?: boolean;
+  tipButtonEnabled?: boolean; // controls the floating "Leave a tip" button
   // Per-cafe Twilio — never sent to the browser, server-only
   twilioAccountSid?: string;
   twilioAuthToken?: string;
