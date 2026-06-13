@@ -3,6 +3,7 @@ import { Box, Typography, Divider, Tabs, TabList, Tab, tabClasses } from '@mui/j
 import { useState, useMemo } from 'react';
 import { ItemData } from '@/types';
 import ItemCard from './ItemCard';
+import ItemRow from './ItemRow';
 import ItemOptionsModal from './ItemOptionsModal';
 import { useCartStore } from '@/store/cartStore';
 import { useCategoryScrollSync } from '@/hooks/useCategoryScrollSync';
@@ -119,20 +120,25 @@ export default function ItemGrid({ items }: ItemGridProps) {
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' },
-                gap: 3,
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' },
+                gap: { xs: 1, md: 3 },
               }}
             >
-              {itemsByCategory[cat].map((item) => (
-                <ItemCard
-                  key={item.id?.toString()}
-                  url={item.imageUrl || ''}
-                  title={item.name}
-                  description={item.description || ''}
-                  soldOut={item.soldOut}
-                  onClick={() => handleItemClick(item)}
-                />
-              ))}
+              {itemsByCategory[cat].map((item) => {
+                const shared = {
+                  url: item.imageUrl || '',
+                  title: item.name,
+                  description: item.description || '',
+                  soldOut: item.soldOut,
+                  onClick: () => handleItemClick(item),
+                };
+                return [
+                  // Compact row on mobile (xs/sm)
+                  <ItemRow key={`${item.id}-row`} {...shared} sx={{ display: { xs: 'flex', md: 'none' } }} />,
+                  // Image card on desktop (md+)
+                  <ItemCard key={`${item.id}-card`} {...shared} sx={{ display: { xs: 'none', md: 'flex' } }} />,
+                ];
+              })}
             </Box>
           </Box>
         ))}

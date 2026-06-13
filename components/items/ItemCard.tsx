@@ -7,6 +7,7 @@ import CardContent from '@mui/joy/CardContent';
 import CardOverflow from '@mui/joy/CardOverflow';
 import Typography from '@mui/joy/Typography';
 import Chip from '@mui/joy/Chip';
+import type { SxProps } from '@mui/joy/styles/types';
 
 interface ItemCardProps {
   url: string;
@@ -14,6 +15,7 @@ interface ItemCardProps {
   description: string;
   onClick: () => void;
   soldOut?: boolean;
+  sx?: SxProps;
 }
 
 export default function ItemCard(props: ItemCardProps) {
@@ -32,6 +34,7 @@ export default function ItemCard(props: ItemCardProps) {
         padding: 0,
         margin: 0,
         ...(props.soldOut ? {} : { '&:hover': { transform: 'scale(1.02)' } }),
+        ...props.sx,
       }}
       variant="solid"
       color="neutral"

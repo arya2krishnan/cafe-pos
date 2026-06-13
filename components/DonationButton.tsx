@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Drawer, Box, Typography, Stack } from '@mui/joy';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import TooltipIconButton from '@/components/common/TooltipIconButton';
@@ -10,10 +10,23 @@ const SNOOPY_URL = 'https://firebasestorage.googleapis.com/v0/b/cafe-pos-gough.f
 
 export default function DonationButton() {
   const [open, setOpen] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
   const { cafe } = useCafe();
   // On mobile the customer is already on their phone, so a QR is useless —
   // link straight to Venmo instead of opening the QR drawer.
   const isMobile = useMediaQuery('(max-width:600px)', { noSsr: true });
+
+  // Hide the button when the page footer is in view so it never covers it.
+  useEffect(() => {
+    const footer = document.querySelector('footer');
+    if (!footer) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setFooterVisible(entry.isIntersecting),
+      { rootMargin: '0px 0px -12px 0px' },
+    );
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, []);
 
   if (!cafe?.venmoUsername || cafe.tipButtonEnabled === false) return null;
 
@@ -36,7 +49,7 @@ export default function DonationButton() {
           right: { xs: 12, sm: 20 },
           borderRadius: 'xl',
           zIndex: 1100,
-          transition: 'all 0.2s ease-in-out',
+          transition: 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out',
           minWidth: { xs: 'auto', sm: 180 },
           height: { xs: 52, sm: 64 },
           px: { xs: 1.75, sm: 2.5 },
@@ -44,8 +57,12 @@ export default function DonationButton() {
           alignItems: 'center',
           gap: { xs: 1, sm: 1.5 },
           fontWeight: 'bold',
+          // Fade out (and disable) when the footer is in view so it can't cover it.
+          opacity: footerVisible ? 0 : 1,
+          pointerEvents: footerVisible ? 'none' : 'auto',
+          transform: footerVisible ? 'translateY(16px)' : 'none',
           '&:hover': {
-            transform: 'scale(1.05)',
+            transform: footerVisible ? 'translateY(16px)' : 'scale(1.05)',
             boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
           },
         }}
